@@ -1,7 +1,8 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 
 const useCanvas = (options = {}) => {
     const { draw, shapes } = options
+    const [canvas, setCanvas] = useState(null)
     const canvasRef = useRef(null)
 
     const resizeCanvas = (canvas) => {
@@ -19,12 +20,13 @@ const useCanvas = (options = {}) => {
 
     useEffect(() => {
         const canvas = canvasRef.current
-        const context = canvas.getContext(options.context || '2d')
+        const context = canvas.getContext('2d')
+        setCanvas(canvas)
         resizeCanvas(canvas)
         draw(context)
     }, [draw, shapes])
 
-    return canvasRef
+    return { canvas, canvasRef }
 }
 
 export default useCanvas
