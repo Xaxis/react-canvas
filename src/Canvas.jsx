@@ -10,9 +10,9 @@ const Canvas = (props) => {
     const [isShapeDragging, setIsShapeDragging] = useState(false)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [shapes, setShapes] = useState({
-        1: { x: 100, y: 100, radius: 10, color: 'red' },
-        2: { x: 200, y: 200, radius: 10, color: 'green' },
-        3: { x: 300, y: 300, radius: 10, color: 'blue' }
+        1: { x: 100, y: 100, radius: 6, color: 'red' },
+        2: { x: 200, y: 200, radius: 6, color: 'green' },
+        3: { x: 300, y: 300, radius: 6, color: 'blue' }
     })
     const [shapesArr, setShapesArr] = useState(Object.entries(shapes).map(([key, value]) => value))
 
@@ -48,10 +48,16 @@ const Canvas = (props) => {
     }
 
     const handleMouseTouchDown = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        let mx = e.pageX - e.target.offsetLeft
-        let my = e.pageY - e.target.offsetTop
+        let mx, my
+        if (e.type === 'touchstart' && e.touches.length === 1) {
+            let touch = e.touches[0]
+            mx = touch.pageX - e.target.offsetLeft
+            my = touch.pageY - e.target.offsetTop
+        } else {
+            e.preventDefault()
+            mx = e.pageX - e.target.offsetLeft
+            my = e.pageY - e.target.offsetTop
+        }
         for (let i = 0; i < shapesArr.length; i++) {
             let shape = shapesArr[i]
             if (handleMouseShapeHitDetect(mx, my, shape)) {
@@ -74,18 +80,25 @@ const Canvas = (props) => {
 
     const handleMouseTouchUp = (e) => {
         canvas.style.cursor = 'default'
+        if (e.type === 'mouseup' || e.type === 'mouseout') {
+            e.preventDefault()
+        }
         if (!isShapeDragging) return
-        e.preventDefault()
-        e.stopPropagation()
         setIsShapeDragging(false)
         setActiveDraggingShape(null)
     }
 
     const handleMouseTouchMove = (e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        let mmx = e.pageX - e.target.offsetLeft
-        let mmy = e.pageY - e.target.offsetTop
+        let mx, my, mmx, mmy
+        if (e.type === 'touchmove' && e.touches.length === 1) {
+            let touch = e.touches[0]
+            mx = mmx = touch.pageX - e.target.offsetLeft
+            my = mmy = touch.pageY - e.target.offsetTop
+        } else {
+            e.preventDefault()
+            mx = mmx = e.pageX - e.target.offsetLeft
+            my = mmy = e.pageY - e.target.offsetTop
+        }
         for (let i = 0; i < shapesArr.length; i++) {
             let shape = shapesArr[i]
             if (handleMouseShapeHitDetect(mmx, mmy, shape)) {
@@ -96,8 +109,6 @@ const Canvas = (props) => {
             }
         }
         if (!isShapeDragging) return
-        let mx = e.pageX - e.target.offsetLeft
-        let my = e.pageY - e.target.offsetTop
         setCurDragX(mx)
         setCurDragY(my)
         let dx = mx - activeDraggingShape.x
@@ -113,9 +124,13 @@ const Canvas = (props) => {
             ref={canvasRef}
             {...rest}
             onMouseDown={handleMouseTouchDown}
+            onTouchStart={handleMouseTouchDown}
             onMouseUp={handleMouseTouchUp}
+            onTouchEnd={handleMouseTouchUp}
             onMouseOut={handleMouseTouchUp}
+            onTouchCancel={handleMouseTouchUp}
             onMouseMove={handleMouseTouchMove}
+            onTouchMove={handleMouseTouchMove}
         />
     )
 }
