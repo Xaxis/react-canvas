@@ -29,7 +29,6 @@ div.App > div.CanvasContainer > canvas {
   width: 80%;
   height: 80%;
   margin: 0 auto;
-  touch-action: none;
   background-color: #000;
   background-origin: content-box;
   background-position: center;
