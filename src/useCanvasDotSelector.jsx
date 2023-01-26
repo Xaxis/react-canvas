@@ -97,14 +97,14 @@ const useCanvasDotSelector = (options = {}) => {
                 }
             }
         }
-        if (!activeDraggingShape) return
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
+        if (!activeDraggingShape || !isMoveWithinBounds) return false
         if (isMoveWithinBounds) {
             let dx = mx - activeDraggingShape.x
             let dy = my - activeDraggingShape.y
-            drawCanvas()
             activeDraggingShape.x += dx
             activeDraggingShape.y += dy
+            drawCanvas()
         }
     }
 
