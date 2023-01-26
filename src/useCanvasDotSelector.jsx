@@ -2,24 +2,25 @@ import { useRef, useState, useEffect } from 'react'
 
 const useCanvasDotSelector = (options = {}) => {
     const {
+        initDots = [],
         dotMaxCount = 6,
         dotRadius = 10,
     } = options
     const canvasRef = useRef(null)
-    const [curDragX, setCurDragX] = useState(0)
-    const [curDragY, setCurDragY] = useState(0)
+    const [canvasContext, setCanvasContext] = useState(null)
+    const [backgroundImage, setBackgroundImage] = useState(null)
     const [activeShapeCount, setActiveShapeCount] = useState(0)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [defaultShapes, setDefaultShapes] = useState({
-        1: { x: 0, y: 0, radius: dotRadius, color: 'red', active: false },
-        2: { x: 0, y: 0, radius: dotRadius, color: 'green', active: false },
-        3: { x: 0, y: 0, radius: dotRadius, color: 'blue', active: false },
-        4: { x: 0, y: 0, radius: dotRadius, color: 'cyan', active: false },
-        5: { x: 0, y: 0, radius: dotRadius, color: 'magenta', active: false },
-        6: { x: 0, y: 0, radius: dotRadius, color: 'yellow', active: false },
+        1: { x: 20, y: 20, radius: dotRadius, color: 'red', added: false },
+        2: { x: 40, y: 40, radius: dotRadius, color: 'green', added: false },
+        3: { x: 60, y: 60, radius: dotRadius, color: 'blue', added: false },
+        4: { x: 80, y: 80, radius: dotRadius, color: 'cyan', added: false },
+        5: { x: 100, y: 100, radius: dotRadius, color: 'magenta', added: false },
+        6: { x: 120, y: 120, radius: dotRadius, color: 'yellow', added: false },
     })
     const [shapes, setShapes] = useState({})
-    const [shapesArr, setShapesArr] = useState(Object.entries(shapes).map(([key, value]) => value))
+    const [shapesArr, setShapesArr] = useState([])
 
     const handleMouseShapeHitDetect = (mx, my, shape) => {
         if (shape.radius) {
@@ -84,59 +85,141 @@ const useCanvasDotSelector = (options = {}) => {
             }
         }
         if (!activeDraggingShape) return
-        setCurDragX(mx)
-        setCurDragY(my)
         let dx = mx - activeDraggingShape.x
         let dy = my - activeDraggingShape.y
+        drawCanvas()
         activeDraggingShape.x += dx
         activeDraggingShape.y += dy
     }
 
-    const resizeCanvas = (canvas, context) => {
+    // @todo - May not need this
+    const addNextDot = (mx, my) => {
+        if (activeShapeCount >= dotMaxCount) return
+        setActiveShapeCount(activeShapeCount + 1)
+        let nextShape = Object.entries(defaultShapes).find(([key, value]) => !shapes[key])
+        if (nextShape) {
+            let [key, shape] = nextShape
+            shape.x = mx
+            shape.y = my
+            const newShapes = { ...shapes, [key]: shape }
+            setShapes(newShapes)
+        }
+    }
+
+    const loadImageIntoCanvas = (imageSrc) => {
+        const bgImage = new Image()
+        bgImage.src = imageSrc
+        setBackgroundImage(bgImage)
+    }
+
+    const resizeCanvas = (canvas) => {
         const { width, height } = canvas.getBoundingClientRect()
         if (canvas.width !== width || canvas.height !== height) {
             const { devicePixelRatio:ratio=1 } = window
             canvas.width = width * ratio
             canvas.height = height * ratio
-            context.scale(ratio, ratio)
+            canvasContext.scale(ratio, ratio)
             return { deltaWidth: width, deltaHeight: height }
         }
         return false
     }
 
-    const drawCanvas = (canvas, context) => {
-        context.clearRect(0, 0, context.canvas.width, context.canvas.height)
-        for (let i = 0; i < shapesArr.length; i++) {
-            let shape = shapesArr[i]
-            if (shape.radius) {
-                context.beginPath()
-                context.arc(shape.x, shape.y, shape.radius + 2, 0, Math.PI * 2)
-                context.fillStyle = 'white'
-                context.fill()
-                context.beginPath()
-                context.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2)
-                context.fillStyle = shape.color
-                context.fill()
+    const drawCanvas = (options = {}) => {
+        const { shapesOverride } = options
+        let shapesArrInit = shapesArr
+        if (shapesOverride) {
+            shapesArrInit = Object.entries(shapesOverride).map(([key, value]) => value)
+            setShapesArr(shapesArrInit)
+        }
+        if (canvasContext) {
+            canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height)
+            if (backgroundImage) {
+                const { devicePixelRatio:ratio=1 } = window
+                const canvasElmWidth = canvasContext.canvas.width / ratio
+                const canvasElmHeight = canvasContext.canvas.height / ratio
+
+                // Scale image to maintain its aspect ratio with its height equal to the canvas height
+                const aspectRatio = backgroundImage.width / backgroundImage.height
+                const newWidth = canvasElmHeight * aspectRatio
+                const newHeight = canvasElmHeight
+                backgroundImage.width = newWidth
+                backgroundImage.height = newHeight
+
+                // Get coordinates to center the image inside the canvas
+                const x = (canvasElmWidth - newWidth) / 2
+                canvasContext.drawImage(backgroundImage, x, 0, newWidth, newHeight)
+
+                // // Scale the image object size to fit within the canvas, at the images original aspect ratio
+                // let newWidth = width / aspectRatio
+                // let newHeight = canvasHeight
+                // console.log('canvas size', canvasWidth, canvasHeight)
+                // console.log('new image size', newWidth, newHeight)
+                // backgroundImage.width = newWidth
+                // backgroundImage.height = 300
+                // console.log(canvasHeight)
+                // canvasContext.drawImage(backgroundImage, 0, 0, newWidth, 400)
+            }
+            for (let i = 0; i < shapesArrInit.length; i++) {
+                let shape = shapesArrInit[i]
+                if (shape.radius) {
+                    canvasContext.beginPath()
+                    canvasContext.arc(shape.x, shape.y, shape.radius + 2, 0, Math.PI * 2)
+                    canvasContext.fillStyle = 'white'
+                    canvasContext.fill()
+                    canvasContext.beginPath()
+                    canvasContext.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2)
+                    canvasContext.fillStyle = shape.color
+                    canvasContext.fill()
+                }
             }
         }
     }
 
     useEffect(() => {
+        if (initDots && initDots.length) {
+            const newShapes = initDots.reduce((acc, key) => {
+                if (defaultShapes[key]) {
+                    acc[key] = defaultShapes[key]
+                }
+                return acc
+            }, {})
+            const newShapesKeys = Object.keys(newShapes)
+            const shapesKeys = Object.keys(shapes)
+            const shapesKeysDiff = newShapesKeys.filter((key) => !shapesKeys.includes(key))
+            if (shapesKeysDiff.length) {
+                setShapes(newShapes)
+            }
+        }
+    }, [initDots])
+
+    useEffect(() => {
         canvasRef.current.style.touchAction = 'none'
+        canvasRef.current.style.backgroundColor = '#000000'
     }, [canvasRef])
 
     useEffect(() => {
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
-        resizeCanvas(canvas, context)
-        drawCanvas(canvas, context)
-    }, [drawCanvas])
+        setCanvasContext(context)
+        if (canvasContext) {
+            resizeCanvas(canvas)
+            drawCanvas()
+        }
+    }, [canvasContext, shapes])
+
+    useEffect(() => {
+        if (Object.entries(shapes).length) {
+            // console.log('shapes', shapes) // @todo
+            drawCanvas({ shapesOverride: shapes })
+        }
+    }, [shapes])
 
     return {
+        canvasRef,
+        loadImageIntoCanvas,
         handleMouseTouchDown,
         handleMouseTouchUp,
         handleMouseTouchMove,
-        canvasRef,
         activeDot: activeDraggingShape,
     }
 }
