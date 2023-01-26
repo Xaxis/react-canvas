@@ -2,6 +2,8 @@ import { useRef, useState, useEffect } from 'react'
 
 const useCanvasDotSelector = (options = {}) => {
     const {
+        initBgColor = '#000000',
+        initBgImageSrc = '',
         initDots = [],
         dotMaxCount = 6,
         dotRadius = 10,
@@ -10,6 +12,7 @@ const useCanvasDotSelector = (options = {}) => {
     const [canvasContext, setCanvasContext] = useState(null)
     const [backgroundImage, setBackgroundImage] = useState(null)
     const [activeShapeCount, setActiveShapeCount] = useState(0)
+    const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [defaultShapes, setDefaultShapes] = useState({
         1: { x: 20, y: 20, radius: dotRadius, color: 'red', added: false },
@@ -92,24 +95,11 @@ const useCanvasDotSelector = (options = {}) => {
         activeDraggingShape.y += dy
     }
 
-    // @todo - May not need this
-    const addNextDot = (mx, my) => {
-        if (activeShapeCount >= dotMaxCount) return
-        setActiveShapeCount(activeShapeCount + 1)
-        let nextShape = Object.entries(defaultShapes).find(([key, value]) => !shapes[key])
-        if (nextShape) {
-            let [key, shape] = nextShape
-            shape.x = mx
-            shape.y = my
-            const newShapes = { ...shapes, [key]: shape }
-            setShapes(newShapes)
-        }
-    }
-
     const loadImageIntoCanvas = (imageSrc) => {
         const bgImage = new Image()
         bgImage.src = imageSrc
         setBackgroundImage(bgImage)
+        drawCanvas()
     }
 
     const resizeCanvas = (canvas) => {
@@ -148,16 +138,6 @@ const useCanvasDotSelector = (options = {}) => {
                 // Get coordinates to center the image inside the canvas
                 const x = (canvasElmWidth - newWidth) / 2
                 canvasContext.drawImage(backgroundImage, x, 0, newWidth, newHeight)
-
-                // // Scale the image object size to fit within the canvas, at the images original aspect ratio
-                // let newWidth = width / aspectRatio
-                // let newHeight = canvasHeight
-                // console.log('canvas size', canvasWidth, canvasHeight)
-                // console.log('new image size', newWidth, newHeight)
-                // backgroundImage.width = newWidth
-                // backgroundImage.height = 300
-                // console.log(canvasHeight)
-                // canvasContext.drawImage(backgroundImage, 0, 0, newWidth, 400)
             }
             for (let i = 0; i < shapesArrInit.length; i++) {
                 let shape = shapesArrInit[i]
@@ -176,8 +156,8 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     useEffect(() => {
-        if (initDots && initDots.length) {
-            const newShapes = initDots.reduce((acc, key) => {
+        if (activeShapeKeys && activeShapeKeys.length) {
+            const newShapes = activeShapeKeys.reduce((acc, key) => {
                 if (defaultShapes[key]) {
                     acc[key] = defaultShapes[key]
                 }
@@ -190,11 +170,12 @@ const useCanvasDotSelector = (options = {}) => {
                 setShapes(newShapes)
             }
         }
-    }, [initDots])
+    }, [activeShapeKeys])
 
     useEffect(() => {
         canvasRef.current.style.touchAction = 'none'
-        canvasRef.current.style.backgroundColor = '#000000'
+        canvasRef.current.style.backgroundColor = initBgColor
+        if (initBgImageSrc) loadImageIntoCanvas(initBgImageSrc)
     }, [canvasRef])
 
     useEffect(() => {
@@ -204,12 +185,12 @@ const useCanvasDotSelector = (options = {}) => {
         if (canvasContext) {
             resizeCanvas(canvas)
             drawCanvas()
+
         }
     }, [canvasContext, shapes])
 
     useEffect(() => {
         if (Object.entries(shapes).length) {
-            // console.log('shapes', shapes) // @todo
             drawCanvas({ shapesOverride: shapes })
         }
     }, [shapes])
@@ -220,6 +201,7 @@ const useCanvasDotSelector = (options = {}) => {
         handleMouseTouchDown,
         handleMouseTouchUp,
         handleMouseTouchMove,
+        setActiveDots: activeShapeKeys => setActiveShapeKeys(activeShapeKeys),
         activeDot: activeDraggingShape,
     }
 }
