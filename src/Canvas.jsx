@@ -10,6 +10,8 @@ const CanvasDemo = (props) => {
         handleMouseTouchDown,
         handleMouseTouchUp,
         handleMouseTouchMove,
+        activeDot,
+        dots
     } = useCanvasDotSelector({
         initBgColor: '#000000',
         initBgImageSrc: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
@@ -25,6 +27,12 @@ const CanvasDemo = (props) => {
         //     setActiveDots([1, 2, 3, 4, 5, 6])
         // }, 3000)
     }, [])
+
+    useEffect(() => {
+        if (1 in dots) {
+            console.log(dots[1])
+        }
+    }, [dots])
 
     return (
         <canvas

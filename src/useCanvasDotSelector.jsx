@@ -20,15 +20,16 @@ const useCanvasDotSelector = (options = {}) => {
     const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [defaultShapes, setDefaultShapes] = useState({
-        1: { x: 20, y: 20, radius: dotRadius, color: 'red' },
-        2: { x: 40, y: 40, radius: dotRadius, color: 'green' },
-        3: { x: 60, y: 60, radius: dotRadius, color: 'blue' },
-        4: { x: 80, y: 80, radius: dotRadius, color: 'cyan' },
-        5: { x: 100, y: 100, radius: dotRadius, color: 'magenta' },
-        6: { x: 120, y: 120, radius: dotRadius, color: 'yellow' },
+        1: { key: 1, x: 20, y: 20, radius: dotRadius, color: 'red' },
+        2: { key: 2, x: 40, y: 40, radius: dotRadius, color: 'green' },
+        3: { key: 3, x: 60, y: 60, radius: dotRadius, color: 'blue' },
+        4: { key: 4, x: 80, y: 80, radius: dotRadius, color: 'cyan' },
+        5: { key: 5, x: 100, y: 100, radius: dotRadius, color: 'magenta' },
+        6: { key: 6, x: 120, y: 120, radius: dotRadius, color: 'yellow' },
     })
     const [shapes, setShapes] = useState({})
     const [shapesArr, setShapesArr] = useState([])
+    const [trackingShapes, setTrackingShapes] = useState({})
 
     const handleMouseTouchShapeHitDetect = (mx, my, shape) => {
         if (shape.radius) {
@@ -191,6 +192,12 @@ const useCanvasDotSelector = (options = {}) => {
                     canvasContext.fill()
                 }
             }
+            const newTrackingShapes = {}
+            shapesArrInit.map((shape) => {
+                newTrackingShapes[shape.key] = { ...shape, x: shape.x - x, y: shape.y }
+                return { ...shape, x: shape.x - x, y: shape.y }
+            })
+            setTrackingShapes(newTrackingShapes)
         }
     }
 
@@ -202,14 +209,6 @@ const useCanvasDotSelector = (options = {}) => {
 
         // Load initial background image
         if (initBgImageSrc) loadImageIntoCanvas(initBgImageSrc)
-
-        // @todo: draw initial shapes within background image bounding box
-        // Object.entries(shapes).map(([key, shape]) => {
-        //     shapes[key] = { ...shape }
-        //     shapes[key].x = shape.x + bgImageBoundingBox.tl.x
-        //     shapes[key].y = shape.y + bgImageBoundingBox.tl.y
-        // })
-        // console.log(shapes)
 
         // Add initial shapes
         if (activeShapeKeys && activeShapeKeys.length) {
@@ -252,6 +251,7 @@ const useCanvasDotSelector = (options = {}) => {
         handleMouseTouchMove,
         setActiveDots: activeShapeKeys => setActiveShapeKeys(activeShapeKeys),
         activeDot: activeDraggingShape,
+        dots: trackingShapes,
     }
 }
 
