@@ -18,27 +18,6 @@ const useCanvas = (options = {}) => {
     }
 
     useEffect(() => {
-        // document.addEventListener('touchstart', (e) => {
-        //     e.preventDefault()
-        //     document.body.style.touchAction = 'none'
-        // }, { passive: false })
-        // document.addEventListener('touchmove', (e) => {
-        //     e.preventDefault()
-        //     document.body.style.touchAction = 'none'
-        // }, { passive: false })
-        // if (canvas) {
-        //     canvas.onmousedown = ''
-        //     canvas.onmouseup = ''
-        //     canvas.onmouseout = ''
-        //     canvas.onmousemove = ''
-        //     canvas.ontouchstart = ''
-        //     canvas.ontouchend = ''
-        //     canvas.ontouchcancel = ''
-        //     canvas.ontouchmove = ''
-        // }
-    }, [canvas])
-
-    useEffect(() => {
         const canvas = canvasRef.current
         const context = canvas.getContext('2d')
         setCanvas(canvas)

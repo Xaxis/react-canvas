@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import useCanvas from './useCanvas'
 
 const Canvas = (props) => {
@@ -10,9 +10,9 @@ const Canvas = (props) => {
     const [isShapeDragging, setIsShapeDragging] = useState(false)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [shapes, setShapes] = useState({
-        1: { x: 100, y: 100, radius: 6, color: 'red' },
-        2: { x: 200, y: 200, radius: 6, color: 'green' },
-        3: { x: 300, y: 300, radius: 6, color: 'blue' }
+        1: { x: 100, y: 100, radius: 10, color: 'red' },
+        2: { x: 200, y: 200, radius: 10, color: 'green' },
+        3: { x: 300, y: 300, radius: 10, color: 'blue' }
     })
     const [shapesArr, setShapesArr] = useState(Object.entries(shapes).map(([key, value]) => value))
 
@@ -54,7 +54,6 @@ const Canvas = (props) => {
             mx = touch.pageX - e.target.offsetLeft
             my = touch.pageY - e.target.offsetTop
         } else {
-            e.preventDefault()
             mx = e.pageX - e.target.offsetLeft
             my = e.pageY - e.target.offsetTop
         }
@@ -80,9 +79,6 @@ const Canvas = (props) => {
 
     const handleMouseTouchUp = (e) => {
         canvas.style.cursor = 'default'
-        if (e.type === 'mouseup' || e.type === 'mouseout') {
-            e.preventDefault()
-        }
         if (!isShapeDragging) return
         setIsShapeDragging(false)
         setActiveDraggingShape(null)
@@ -95,7 +91,6 @@ const Canvas = (props) => {
             mx = mmx = touch.pageX - e.target.offsetLeft
             my = mmy = touch.pageY - e.target.offsetTop
         } else {
-            e.preventDefault()
             mx = mmx = e.pageX - e.target.offsetLeft
             my = mmy = e.pageY - e.target.offsetTop
         }
@@ -119,17 +114,30 @@ const Canvas = (props) => {
         setStartDragY(curDragY)
     }
 
+    // useEffect(() => {
+    //     if (canvas) {
+    //         // canvas.addEventListener('touchstart', handleMouseTouchDown, { passive: false })
+    //         // canvas.addEventListener('touchend', handleMouseTouchUp, { passive: false })
+    //         // canvas.addEventListener('touchcancel', handleMouseTouchUp, { passive: false })
+    //         // canvas.addEventListener('touchmove', handleMouseTouchMove, { passive: false })
+    //         // canvas.addEventListener('touchstart', handleMouseTouchDown)
+    //         // canvas.addEventListener('touchend', handleMouseTouchUp)
+    //         // canvas.addEventListener('touchcancel', handleMouseTouchUp)
+    //         // canvas.addEventListener('touchmove', handleMouseTouchMove)
+    //     }
+    // }, [canvas])
+
     return (
         <canvas
             ref={canvasRef}
             {...rest}
             onMouseDown={handleMouseTouchDown}
-            onTouchStart={handleMouseTouchDown}
             onMouseUp={handleMouseTouchUp}
-            onTouchEnd={handleMouseTouchUp}
             onMouseOut={handleMouseTouchUp}
-            onTouchCancel={handleMouseTouchUp}
             onMouseMove={handleMouseTouchMove}
+            onTouchStart={handleMouseTouchDown}
+            onTouchEnd={handleMouseTouchUp}
+            onTouchCancel={handleMouseTouchUp}
             onTouchMove={handleMouseTouchMove}
         />
     )
