@@ -12,10 +12,7 @@ const useCanvasDotSelector = (options = {}) => {
     const [canvasContext, setCanvasContext] = useState(null)
     const [backgroundImage, setBackgroundImage] = useState(null)
     const [bgImageBoundingBox, setBgImageBoundingBox] = useState({
-        tl: { x: 0, y: 0 },
-        tr: { x: 0, y: 0 },
-        bl: { x: 0, y: 0 },
-        br: { x: 0, y: 0 },
+        tl: { x: 0, y: 0 }, tr: { x: 0, y: 0 }, bl: { x: 0, y: 0 }, br: { x: 0, y: 0 },
     })
     const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
@@ -27,6 +24,9 @@ const useCanvasDotSelector = (options = {}) => {
         5: { key: 5, x: 100, y: 100, radius: dotRadius, color: 'magenta' },
         6: { key: 6, x: 120, y: 120, radius: dotRadius, color: 'yellow' },
     })
+    const [zoomScale, setZoomScale] = useState(1)
+    const [zoomInitialDistance, setZoomInitialDistance] = useState(0)
+    const [zoomCurrentDistance, setZoomCurrentDistance] = useState(0)
     const [shapes, setShapes] = useState({})
     const [shapesArr, setShapesArr] = useState([])
     const [trackingShapes, setTrackingShapes] = useState({})
@@ -43,6 +43,41 @@ const useCanvasDotSelector = (options = {}) => {
     const handleMouseTouchInsideBgImageBoundingBoxHitDetect = (mx, my) => {
         const { tl, tr, bl } = bgImageBoundingBox
         return (mx >= tl.x + dotRadius && mx <= tr.x - dotRadius && my >= tl.y + dotRadius && my <= bl.y - dotRadius)
+    }
+
+    const handleTouchPinchZoomStart = (e) => {
+        if (e.touches.length === 2) {
+            const { clientX: x1, clientY: y1 } = e.touches[0]
+            const { clientX: x2, clientY: y2 } = e.touches[1]
+
+            // Get the initial distance between touch points
+            const dx = x2 - x1
+            const dy = y2 - y1
+            const initialDistance = Math.sqrt(dx * dx + dy * dy)
+            setZoomInitialDistance(initialDistance)
+        }
+    }
+
+    const handleTouchPinchZoomMove = (e) => {
+        if (e.touches.length === 2) {
+            const { clientX: x1, clientY: y1 } = e.touches[0]
+            const { clientX: x2, clientY: y2 } = e.touches[1]
+
+            // Get the current distance between touch points
+            const dx = x2 - x1
+            const dy = y2 - y1
+            const currentDistance = Math.sqrt(dx * dx + dy * dy)
+            setZoomCurrentDistance(currentDistance)
+
+            // Calculate change in distance and update zoom level
+            const delta = currentDistance - zoomInitialDistance
+            const currentZoomScale = zoomScale + (delta * 0.0005)
+
+            // Clamp zoom scale to min and max value
+            const clampedZoomScale = Math.min(Math.max(currentZoomScale, 1), 4)
+            setZoomScale(clampedZoomScale)
+            drawCanvas()
+        }
     }
 
     const handleMouseTouchDown = (e) => {
@@ -166,7 +201,7 @@ const useCanvasDotSelector = (options = {}) => {
             canvasContext.clearRect(0, 0, canvasContext.canvas.width, canvasContext.canvas.height)
 
             // Draw background image
-            canvasContext.drawImage(backgroundImage, x, 0, newImgWidth, newImgHeight)
+            canvasContext.drawImage(backgroundImage, x, 0, newImgWidth * zoomScale, newImgHeight * zoomScale)
 
             // Draw image bounding box for debugging
             if (drawBgImageBox) {
@@ -249,6 +284,8 @@ const useCanvasDotSelector = (options = {}) => {
         handleMouseTouchDown,
         handleMouseTouchUp,
         handleMouseTouchMove,
+        handleTouchPinchZoomStart,
+        handleTouchPinchZoomMove,
         setActiveDots: activeShapeKeys => setActiveShapeKeys(activeShapeKeys),
         activeDot: activeDraggingShape,
         dots: trackingShapes,

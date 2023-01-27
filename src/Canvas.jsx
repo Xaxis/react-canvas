@@ -10,6 +10,8 @@ const CanvasDemo = (props) => {
         handleMouseTouchDown,
         handleMouseTouchUp,
         handleMouseTouchMove,
+        handleTouchPinchZoomStart,
+        handleTouchPinchZoomMove,
         activeDot,
         dots
     } = useCanvasDotSelector({
@@ -30,7 +32,7 @@ const CanvasDemo = (props) => {
 
     useEffect(() => {
         if (1 in dots) {
-            console.log(dots[1])
+            // console.log(dots[1])
         }
     }, [dots])
 
@@ -42,10 +44,16 @@ const CanvasDemo = (props) => {
             onMouseUp={handleMouseTouchUp}
             onMouseOut={handleMouseTouchUp}
             onMouseMove={handleMouseTouchMove}
-            onTouchStart={handleMouseTouchDown}
+            onTouchStart={(e) => {
+                handleMouseTouchDown(e)
+                handleTouchPinchZoomStart(e)
+            }}
             onTouchEnd={handleMouseTouchUp}
             onTouchCancel={handleMouseTouchUp}
-            onTouchMove={handleMouseTouchMove}
+            onTouchMove={(e) => {
+                handleMouseTouchMove(e)
+                handleTouchPinchZoomMove(e)
+            }}
         />
     )
 }
