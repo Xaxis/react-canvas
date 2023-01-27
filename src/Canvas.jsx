@@ -12,6 +12,10 @@ const CanvasDemo = (props) => {
         handleMouseTouchMove,
         handleTouchPinchZoomStart,
         handleTouchPinchZoomMove,
+        handleMouseTouchMoveImageStart,
+        handleMouseTouchMoveImageEnd,
+        handleMouseTouchMoveImageMove,
+        handleMouseWheelZoom,
         activeDot,
         dots
     } = useCanvasDotSelector({
@@ -19,7 +23,7 @@ const CanvasDemo = (props) => {
         initBgImageSrc: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
         initDots: [1, 2, 3],
         dotRadius: 8,
-        drawBgImageBox: false,
+        drawBgImageBox: true,
     })
 
     useEffect(() => {
@@ -40,19 +44,42 @@ const CanvasDemo = (props) => {
         <canvas
             ref={canvasRef}
             {...rest}
-            onMouseDown={handleMouseTouchDown}
-            onMouseUp={handleMouseTouchUp}
-            onMouseOut={handleMouseTouchUp}
-            onMouseMove={handleMouseTouchMove}
+            onMouseDown={(e) => {
+                handleMouseTouchDown(e)
+                handleMouseTouchMoveImageStart(e)
+            }}
+            onMouseUp={(e) => {
+                handleMouseTouchUp(e)
+                handleMouseTouchMoveImageEnd(e)
+            }}
+            onMouseOut={(e) => {
+                handleMouseTouchUp(e)
+                handleMouseTouchMoveImageEnd(e)
+            }}
+            onMouseMove={(e) => {
+                handleMouseTouchMove(e)
+                handleMouseTouchMoveImageMove(e)
+            }}
             onTouchStart={(e) => {
                 handleMouseTouchDown(e)
                 handleTouchPinchZoomStart(e)
+                handleMouseTouchMoveImageStart(e)
             }}
-            onTouchEnd={handleMouseTouchUp}
-            onTouchCancel={handleMouseTouchUp}
+            onTouchEnd={(e) => {
+                handleMouseTouchUp(e)
+                handleMouseTouchMoveImageEnd(e)
+            }}
+            onTouchCancel={(e) => {
+                handleMouseTouchUp(e)
+                handleMouseTouchMoveImageEnd(e)
+            }}
             onTouchMove={(e) => {
                 handleMouseTouchMove(e)
                 handleTouchPinchZoomMove(e)
+                handleMouseTouchMoveImageMove(e)
+            }}
+            onWheel={(e) => {
+                handleMouseWheelZoom(e)
             }}
         />
     )

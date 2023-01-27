@@ -30,7 +30,6 @@ div.App > div.CanvasContainer > canvas {
 }
 
 div.App > div.DummyContent {
-  border: 2px solid orange;
   width: 80%;
   margin: 0 auto;
 }
