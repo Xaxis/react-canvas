@@ -10,9 +10,13 @@ const useCanvasDotSelector = (options = {}) => {
     } = options
     const canvasRef = useRef(null)
     const [canvasContext, setCanvasContext] = useState(null)
-    const [backgroundImage, setBackgroundImage] = useState(null)
-    const [bgImageBoundingBox, setBgImageBoundingBox] = useState({
+    const [bgImage, setBgImage] = useState(null)
+    const [bgImageCoords, setBgImageCoords] = useState({ x: 0, y: 0, width: 0, height: 0 })
+    const [bgImageBoundingBoxPerimeter, setBgImageBoundingBoxPerimeter] = useState({
         tl: { x: 0, y: 0 }, tr: { x: 0, y: 0 }, bl: { x: 0, y: 0 }, br: { x: 0, y: 0 },
+    })
+    const [bgImageBoundingBoxCoords, setBgImageBoundingBoxCoords] = useState({
+        x: 0, y: 0, width: 0, height: 0,
     })
     const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
@@ -45,7 +49,7 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseTouchInsideBgImageBoundingBoxHitDetect = (mx, my) => {
-        const { tl, tr, bl } = bgImageBoundingBox
+        const { tl, tr, bl } = bgImageBoundingBoxPerimeter
         return (mx >= tl.x + dotRadius && mx <= tr.x - dotRadius && my >= tl.y + dotRadius && my <= bl.y - dotRadius)
     }
 
@@ -131,7 +135,7 @@ const useCanvasDotSelector = (options = {}) => {
             const { x: startX, y: startY } = imageMoveStartCoords
             dx = x - startX + imageMoveEndCoords.x
             dy = y - startY + imageMoveEndCoords.y
-            setImageMoveOffsetCoords({ x: dx, y: dy })
+
         } else {
             e.stopPropagation()
             mx = e.pageX - e.target.offsetLeft
@@ -140,9 +144,27 @@ const useCanvasDotSelector = (options = {}) => {
             const { x: startX, y: startY } = imageMoveStartCoords
             dx = x - startX + imageMoveEndCoords.x
             dy = y - startY + imageMoveEndCoords.y
-            setImageMoveOffsetCoords({ x: dx, y: dy })
         }
-        console.log('dx, dy', dx, dy)
+
+        // Keep movement of image within bounds of bounding box
+        const { width: bgImageW, height: bgImageH } = bgImageCoords
+        const { width: bgBoundW, height: bgBoundH } = bgImageBoundingBoxCoords
+        if (dx >= 0 && bgImageW >= bgBoundW) {
+            dx = 0
+        } else if (dx <= imageMoveOffsetCoords.x && bgImageW >= bgBoundW && bgImageW - bgBoundW <= Math.abs(imageMoveOffsetCoords.x)) {
+            const stopXPad = Math.abs(Math.abs((bgImageW - bgBoundW)) - Math.abs(imageMoveOffsetCoords.x))
+            dx = imageMoveOffsetCoords.x + stopXPad
+        }
+        if (dy >= 0 && bgImageH >= bgBoundH) {
+            dy = 0
+        } else if (dy <= imageMoveOffsetCoords.y && bgImageH >= bgBoundH && bgImageH - bgBoundH <= Math.abs(imageMoveOffsetCoords.y)) {
+            const stopYPad = Math.abs(Math.abs((bgImageH - bgBoundH)) - Math.abs(imageMoveOffsetCoords.y))
+            dy = imageMoveOffsetCoords.y + stopYPad
+        }
+
+
+        // Set offset coords and redraw the canvas
+        setImageMoveOffsetCoords({ x: dx, y: dy })
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
         if (!isMoveWithinBounds) return false
         drawCanvas()
@@ -217,7 +239,7 @@ const useCanvasDotSelector = (options = {}) => {
     const loadImageIntoCanvas = (imageSrc) => {
         const bgImage = new Image()
         bgImage.src = imageSrc
-        setBackgroundImage(bgImage)
+        setBgImage(bgImage)
         drawCanvas()
     }
 
@@ -244,23 +266,39 @@ const useCanvasDotSelector = (options = {}) => {
             const canvasElmHeight = ctx.canvas.height / ratio
 
             // Scale image to maintain its aspect ratio with its height equal to the canvas height
-            const aspectRatio = backgroundImage.width / backgroundImage.height
+            const aspectRatio = bgImage.width / bgImage.height
             const newImgWidth = canvasElmHeight * aspectRatio
             const newImgHeight = canvasElmHeight
-            backgroundImage.width = newImgWidth
-            backgroundImage.height = newImgHeight
+            bgImage.width = newImgWidth
+            bgImage.height = newImgHeight
 
             // Get coordinates to center the image inside the canvas
             const x = (canvasElmWidth - newImgWidth) / 2
+            const y = (canvasElmHeight - newImgHeight) / 2
 
             // Set the bounding box coordinates
-            const bgImageBoundingBox = {
+            setBgImageBoundingBoxPerimeter({
                 tl: { x, y: 0 },
                 tr: { x: x + newImgWidth, y: 0 },
                 bl: { x, y: newImgHeight },
                 br: { x: x + newImgWidth, y: newImgHeight },
-            }
-            setBgImageBoundingBox(bgImageBoundingBox)
+            })
+
+            // Set the bounding box coordinates
+            setBgImageBoundingBoxCoords({
+                x: x,
+                y: y,
+                width: newImgWidth,
+                height: newImgHeight
+            })
+
+            // Store the background image coordinates
+            setBgImageCoords({
+                x: imageMoveOffsetCoords.x,
+                y: imageMoveOffsetCoords.y,
+                width: newImgWidth * zoomScale,
+                height: newImgHeight * zoomScale,
+            })
 
             // Use passed shapes parameter to redraw canvas
             if (shapesOverride) {
@@ -279,7 +317,7 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.clip()
 
             // Draw background image
-            ctx.drawImage(backgroundImage, x + imageMoveOffsetCoords.x, imageMoveOffsetCoords.y, newImgWidth * zoomScale, newImgHeight * zoomScale)
+            ctx.drawImage(bgImage, x + imageMoveOffsetCoords.x, imageMoveOffsetCoords.y, newImgWidth * zoomScale, newImgHeight * zoomScale)
             ctx.restore()
 
             // Draw a rectangle around the background image that appears 2 pixels thick
