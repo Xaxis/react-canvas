@@ -127,7 +127,7 @@ const useCanvasDotSelector = (options = {}) => {
         }
         if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1) return
         let mx, my, dx, dy
-        if (e.type === 'touchstart' && e.touches.length === 1) {
+        if (e.type === 'touchmove' && e.touches.length === 1) {
             const touch = e.touches[0]
             mx = touch.pageX - e.target.offsetLeft
             my = touch.pageY - e.target.offsetTop
@@ -135,7 +135,6 @@ const useCanvasDotSelector = (options = {}) => {
             const { x: startX, y: startY } = imageMoveStartCoords
             dx = x - startX + imageMoveEndCoords.x
             dy = y - startY + imageMoveEndCoords.y
-
         } else {
             e.stopPropagation()
             mx = e.pageX - e.target.offsetLeft
@@ -317,7 +316,7 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.clip()
 
             // Draw background image
-            ctx.drawImage(bgImage, x + imageMoveOffsetCoords.x, imageMoveOffsetCoords.y, newImgWidth * zoomScale, newImgHeight * zoomScale)
+            ctx.drawImage(bgImage, x + imageMoveOffsetCoords.x, y + imageMoveOffsetCoords.y, newImgWidth * zoomScale, newImgHeight * zoomScale)
             ctx.restore()
 
             // Draw a rectangle around the background image that appears 2 pixels thick
