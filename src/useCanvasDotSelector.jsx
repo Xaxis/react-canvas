@@ -21,12 +21,12 @@ const useCanvasDotSelector = (options = {}) => {
     const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [defaultShapes, setDefaultShapes] = useState({
-        1: { key: 1, x: 20, y: 20, radius: dotRadius, color: 'red' },
-        2: { key: 2, x: 40, y: 40, radius: dotRadius, color: 'green' },
-        3: { key: 3, x: 60, y: 60, radius: dotRadius, color: 'blue' },
-        4: { key: 4, x: 80, y: 80, radius: dotRadius, color: 'cyan' },
-        5: { key: 5, x: 100, y: 100, radius: dotRadius, color: 'magenta' },
-        6: { key: 6, x: 120, y: 120, radius: dotRadius, color: 'yellow' },
+        1: { key: 1, x: 20, y: 20, radius: dotRadius, color: 'red', rgb: '255,0,0', set: false },
+        2: { key: 2, x: 40, y: 40, radius: dotRadius, color: 'green', rgb: '0,255,0', set: false },
+        3: { key: 3, x: 60, y: 60, radius: dotRadius, color: 'blue', rgb: '0,0,255', set: false },
+        4: { key: 4, x: 80, y: 80, radius: dotRadius, color: 'cyan', rgb: '0,255,255', set: false },
+        5: { key: 5, x: 100, y: 100, radius: dotRadius, color: 'magenta', rgb: '255,0,255', set: false },
+        6: { key: 6, x: 120, y: 120, radius: dotRadius, color: 'yellow', rgb: '255,255,0', set: false },
     })
     const [zoomScale, setZoomScale] = useState(1)
     const [zoomInitialDistance, setZoomInitialDistance] = useState(0)
@@ -55,7 +55,7 @@ const useCanvasDotSelector = (options = {}) => {
 
     const handleMouseWheelZoom = (e) => {
         let zoom = zoomScale
-        const { deltaY: delta } = e
+        const {deltaY: delta} = e
         if (delta > 0) {
             zoom -= 0.1
         } else {
@@ -67,7 +67,10 @@ const useCanvasDotSelector = (options = {}) => {
         // While zooming out, set imageMoveOffsetCoords closer to 0 the closer clampedZoomScale gets to 1
         // We do this so it stays within the constraints of the bounding box when zooming back out after moving it
         const clampedZoomScaleOffset = (clampedZoomScale - 1) / 6
-        const updatedCoords = { x: imageMoveOffsetCoords.x * clampedZoomScaleOffset, y: imageMoveOffsetCoords.y * clampedZoomScaleOffset }
+        const updatedCoords = {
+            x: imageMoveOffsetCoords.x * clampedZoomScaleOffset,
+            y: imageMoveOffsetCoords.y * clampedZoomScaleOffset
+        }
         setImageMoveOffsetCoords(updatedCoords)
         setImageMoveEndCoords(updatedCoords)
         drawCanvas()
@@ -176,7 +179,7 @@ const useCanvasDotSelector = (options = {}) => {
         drawCanvas()
     }
 
-    const handleMouseTouchDown = (e) => {
+    const handleMouseTouchMoveDotDown = (e) => {
         let mx, my
         if (e.type === 'touchstart' && e.touches.length === 1) {
             let touch = e.touches[0]
@@ -198,21 +201,24 @@ const useCanvasDotSelector = (options = {}) => {
                 setShapesArr(shapesArr)
 
                 // Set the active shape and its coordinates
+                shape.set = false
                 setActiveDraggingShape(shape)
                 break
             }
         }
     }
 
-    const handleMouseTouchUp = (e) => {
+    const handleMouseTouchMoveDotUp = (e) => {
         if (canvasRef.current.style.cursor === 'move') {
             canvasRef.current.style.cursor = 'move'
         }
         if (!activeDraggingShape) return
+        activeDraggingShape.set = true
         setActiveDraggingShape(null)
+        drawCanvas()
     }
 
-    const handleMouseTouchMove = (e) => {
+    const handleMouseTouchMoveDotMove = (e) => {
         let mx, my, mmx, mmy
         if (e.type === 'touchmove' && e.touches.length === 1) {
             let touch = e.touches[0]
@@ -322,8 +328,12 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.rect(x, 0, newImgWidth, newImgHeight)
             ctx.clip()
 
+            // Assign offset coordinates of the background image location in the canvas
+            const bgImgX = x + imageMoveOffsetCoords.x
+            const bgImgY = y + imageMoveOffsetCoords.y
+
             // Draw background image
-            ctx.drawImage(bgImage, x + imageMoveOffsetCoords.x, y + imageMoveOffsetCoords.y, newImgWidth * zoomScale, newImgHeight * zoomScale)
+            ctx.drawImage(bgImage, bgImgX, bgImgY, newImgWidth * zoomScale, newImgHeight * zoomScale)
             ctx.restore()
 
             // Draw a rectangle around the background image that appears 2 pixels thick
@@ -341,16 +351,33 @@ const useCanvasDotSelector = (options = {}) => {
             // Draw shapes
             for (let i = 0; i < shapesArrInit.length; i++) {
                 let shape = shapesArrInit[i]
-                if (shape.radius) {
-                    ctx.beginPath()
-                    ctx.arc(shape.x, shape.y, shape.radius + 2, 0, Math.PI * 2)
-                    ctx.fillStyle = 'white'
-                    ctx.fill()
-                    ctx.beginPath()
-                    ctx.arc(shape.x, shape.y, shape.radius, 0, Math.PI * 2)
-                    ctx.fillStyle = shape.color
-                    ctx.fill()
+                let shapeX = shape.x
+                let shapeY = shape.y
+
+                // Set opacity of set circles
+                if (shape.set) {
+                    ctx.globalAlpha = 0.5
                 }
+
+                // Set shape coordinates relative to the background image coordinates, both it's zoom scale factor, and
+                // its relocation offset coordinates
+                shapeX = (imageMoveOffsetCoords.x + shapeX) * zoomScale
+                shapeY = (imageMoveOffsetCoords.y + shapeY) * zoomScale
+
+                // Draw white line circle
+                ctx.beginPath()
+                ctx.arc(shapeX, shapeY, shape.radius + 2, 0, Math.PI * 2)
+                ctx.fillStyle = 'white'
+                ctx.fill()
+
+                // Draw circle (dot)
+                ctx.beginPath()
+                ctx.arc(shapeX, shapeY, shape.radius, 0, Math.PI * 2)
+                ctx.fillStyle = shape.color
+                ctx.fill()
+
+                // Set opacity back to 1
+                ctx.globalAlpha = 1
             }
             const newTrackingShapes = {}
             shapesArrInit.map((shape) => {
@@ -417,9 +444,9 @@ const useCanvasDotSelector = (options = {}) => {
     return {
         canvasRef,
         loadImageIntoCanvas,
-        handleMouseTouchDown,
-        handleMouseTouchUp,
-        handleMouseTouchMove,
+        handleMouseTouchMoveDotDown,
+        handleMouseTouchMoveDotUp,
+        handleMouseTouchMoveDotMove,
         handleTouchPinchZoomStart,
         handleTouchPinchZoomMove,
         handleMouseTouchMoveImageStart,

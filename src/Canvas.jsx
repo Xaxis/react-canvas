@@ -7,9 +7,9 @@ const CanvasDemo = (props) => {
         canvasRef,
         loadImageIntoCanvas,
         setActiveDots,
-        handleMouseTouchDown,
-        handleMouseTouchUp,
-        handleMouseTouchMove,
+        handleMouseTouchMoveDotDown,
+        handleMouseTouchMoveDotUp,
+        handleMouseTouchMoveDotMove,
         handleTouchPinchZoomStart,
         handleTouchPinchZoomMove,
         handleMouseTouchMoveImageStart,
@@ -45,36 +45,36 @@ const CanvasDemo = (props) => {
             ref={canvasRef}
             {...rest}
             onMouseDown={(e) => {
-                handleMouseTouchDown(e)
+                handleMouseTouchMoveDotDown(e)
                 handleMouseTouchMoveImageStart(e)
             }}
             onMouseUp={(e) => {
-                handleMouseTouchUp(e)
+                handleMouseTouchMoveDotUp(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onMouseOut={(e) => {
-                handleMouseTouchUp(e)
+                handleMouseTouchMoveDotUp(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onMouseMove={(e) => {
-                handleMouseTouchMove(e)
+                handleMouseTouchMoveDotMove(e)
                 handleMouseTouchMoveImageMove(e)
             }}
             onTouchStart={(e) => {
-                handleMouseTouchDown(e)
+                handleMouseTouchMoveDotDown(e)
                 handleTouchPinchZoomStart(e)
                 handleMouseTouchMoveImageStart(e)
             }}
             onTouchEnd={(e) => {
-                handleMouseTouchUp(e)
+                handleMouseTouchMoveDotUp(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onTouchCancel={(e) => {
-                handleMouseTouchUp(e)
+                handleMouseTouchMoveDotUp(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onTouchMove={(e) => {
-                handleMouseTouchMove(e)
+                handleMouseTouchMoveDotMove(e)
                 handleTouchPinchZoomMove(e)
                 handleMouseTouchMoveImageMove(e)
             }}
