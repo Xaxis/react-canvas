@@ -61,8 +61,15 @@ const useCanvasDotSelector = (options = {}) => {
         } else {
             zoom += 0.1
         }
-        const clampedZoomScale = Math.min(Math.max(zoom, 1), 4)
+        const clampedZoomScale = Math.min(Math.max(zoom, 1), 6)
         setZoomScale(clampedZoomScale)
+
+        // While zooming out, set imageMoveOffsetCoords closer to 0 the closer clampedZoomScale gets to 1
+        // We do this so it stays within the constraints of the bounding box when zooming back out after moving it
+        const clampedZoomScaleOffset = (clampedZoomScale - 1) / 6
+        const updatedCoords = { x: imageMoveOffsetCoords.x * clampedZoomScaleOffset, y: imageMoveOffsetCoords.y * clampedZoomScaleOffset }
+        setImageMoveOffsetCoords(updatedCoords)
+        setImageMoveEndCoords(updatedCoords)
         drawCanvas()
     }
 
