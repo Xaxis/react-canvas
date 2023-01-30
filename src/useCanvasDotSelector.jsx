@@ -190,6 +190,12 @@ const useCanvasDotSelector = (options = {}) => {
             mx = e.pageX - e.target.offsetLeft
             my = e.pageY - e.target.offsetTop
         }
+
+        // Compensate for image move location and zoom scale
+        mx = (mx - imageMoveOffsetCoords.x) / zoomScale
+        my = (my - imageMoveOffsetCoords.y) / zoomScale
+
+        // Check if mouse is inside a shape
         for (let i = 0; i < shapesArr.length; i++) {
             let shape = shapesArr[i]
             if (handleMouseTouchShapeHitDetect(mx, my, shape)) {
@@ -225,8 +231,8 @@ const useCanvasDotSelector = (options = {}) => {
             mx = touch.pageX - e.target.offsetLeft
             my = touch.pageY - e.target.offsetTop
         } else {
-            mx = mmx = e.pageX - e.target.offsetLeft
-            my = mmy = e.pageY - e.target.offsetTop
+            mx = mmx = ((e.pageX - e.target.offsetLeft) - imageMoveOffsetCoords.x) / zoomScale
+            my = mmy = ((e.pageY - e.target.offsetTop) - imageMoveOffsetCoords.y) / zoomScale
             for (let i = 0; i < shapesArr.length; i++) {
                 let shape = shapesArr[i]
                 if (handleMouseTouchShapeHitDetect(mmx, mmy, shape)) {
@@ -237,6 +243,12 @@ const useCanvasDotSelector = (options = {}) => {
                 }
             }
         }
+
+        // Compensate for image move location and zoom scale
+        mx = (mx - imageMoveOffsetCoords.x) / zoomScale
+        my = (my - imageMoveOffsetCoords.y) / zoomScale
+
+        // Only proceed if within bounding box
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
         if (!activeDraggingShape || !isMoveWithinBounds) return false
         if (isMoveWithinBounds) {
@@ -323,9 +335,9 @@ const useCanvasDotSelector = (options = {}) => {
             // Clear canvas before redraw
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-            // Draw rectangle bounding box to clip the background image
+            // Clip the canvas to the background image and redraw the background image
             ctx.save()
-            ctx.rect(x, 0, newImgWidth, newImgHeight)
+            ctx.rect(x, y, newImgWidth, newImgHeight)
             ctx.clip()
 
             // Assign offset coordinates of the background image location in the canvas
@@ -348,7 +360,11 @@ const useCanvasDotSelector = (options = {}) => {
                 ctx.stroke()
             }
 
-            // Draw shapes
+            // Clip the canvas to the bg image again and redraw the shapes so the shapes are also clipped to the bg image
+            ctx.rect(x, y, newImgWidth, newImgHeight)
+            ctx.clip()
+
+            // Draw shapes ("dots")
             for (let i = 0; i < shapesArrInit.length; i++) {
                 let shape = shapesArrInit[i]
                 let shapeX = shape.x
@@ -379,6 +395,9 @@ const useCanvasDotSelector = (options = {}) => {
                 // Set opacity back to 1
                 ctx.globalAlpha = 1
             }
+            ctx.restore()
+
+            // Update tracking shapes
             const newTrackingShapes = {}
             shapesArrInit.map((shape) => {
                 newTrackingShapes[shape.key] = { ...shape, x: shape.x - x, y: shape.y }
