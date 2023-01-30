@@ -324,7 +324,7 @@ const useCanvasDotSelector = (options = {}) => {
                 height: newImgHeight * zoomScale,
             })
 
-            // Use passed shapes parameter to redraw canvas
+            // Set shapes array with override when passed directly as parameter
             if (shapesOverride) {
                 shapesArrInit = Object.entries(shapesOverride).map(([key, shape]) => {
                     return { ...shape, x: shape.x + x, y: shape.y }
@@ -375,10 +375,9 @@ const useCanvasDotSelector = (options = {}) => {
                     ctx.globalAlpha = 0.5
                 }
 
-                // Set shape coordinates relative to the background image coordinates, both it's zoom scale factor, and
-                // its relocation offset coordinates
-                shapeX = (imageMoveOffsetCoords.x + shapeX) * zoomScale
-                shapeY = (imageMoveOffsetCoords.y + shapeY) * zoomScale
+                // Set shape coordinates relative to the background image coordinates, both it's relative location in the canvas and it's zoom scale
+                shapeX = ((shapeX - x) * zoomScale) + x + imageMoveOffsetCoords.x
+                shapeY = ((shapeY - y) * zoomScale) + y + imageMoveOffsetCoords.y
 
                 // Draw white line circle
                 ctx.beginPath()
