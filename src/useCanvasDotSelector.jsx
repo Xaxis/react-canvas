@@ -432,15 +432,14 @@ const useCanvasDotSelector = (options = {}) => {
     useEffect(() => {
         const bgImageSrcTarget = bgImageSrc || bgImageLoadSrc
         setBgImageLoadSrc(null)
-        if (bgImageLoadSrc) {
-            const randHash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+        if (bgImageSrcTarget) {
             const bgImage = new Image()
             const handleBgImageLoad = () => {
                 setBgImageLoadSrc(bgImageSrcTarget)
                 setBgImage(bgImage)
             }
             bgImage.addEventListener('load', handleBgImageLoad)
-            bgImage.src = bgImageSrcTarget + '?rand=' + randHash
+            bgImage.src = bgImageSrcTarget
         }
     }, [bgImageSrc, bgImageLoadSrc])
 
