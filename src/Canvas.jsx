@@ -5,7 +5,7 @@ const CanvasDemo = (props) => {
     const { ...rest } = props
     const {
         canvasRef,
-        loadImageIntoCanvas,
+        setBgImageLoadSrc,
         setActiveDots,
         handleMouseTouchMoveDotDown,
         handleMouseTouchMoveDotUp,
@@ -19,16 +19,16 @@ const CanvasDemo = (props) => {
         activeDot,
         dots
     } = useCanvasDotSelector({
-        initBgColor: '#000000',
-        initBgImageSrc: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
+        bgColor: '#000000',
+        bgImageSrc: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
         initDots: [1, 2, 3],
         dotRadius: 8,
         drawBgImageBox: true,
     })
 
     useEffect(() => {
-        // loadImageIntoCanvas('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80')
-
+        // setBgImageLoadSrc('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80')
+        // setBgImageLoadSrc('https://www.thenews.com.pk/assets/uploads/tns/2015-03-15/558241_5306933_tns.jpg')
         // setTimeout(() => {
         //     setActiveDots([1, 2, 3, 4, 5, 6])
         // }, 3000)

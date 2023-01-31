@@ -2,8 +2,8 @@ import { useRef, useState, useEffect } from 'react'
 
 const useCanvasDotSelector = (options = {}) => {
     const {
-        initBgColor = '#000000',
-        initBgImageSrc = '',
+        bgColor = '#000000',
+        bgImageSrc = '',
         initDots = [],
         dotRadius = 10,
         drawBgImageBox = false,
@@ -12,6 +12,7 @@ const useCanvasDotSelector = (options = {}) => {
     const [canvasContext, setCanvasContext] = useState(null)
     const [globalOffsetCoords, setGlobalOffsetCoords] = useState({ x: 0, y: 0 })
     const [bgImage, setBgImage] = useState(null)
+    const [bgImageLoadSrc, setBgImageLoadSrc] = useState(null)
     const [bgImageCoords, setBgImageCoords] = useState({ x: 0, y: 0, width: 0, height: 0 })
     const [bgImageBoundingBoxPerimeter, setBgImageBoundingBoxPerimeter] = useState({
         tl: { x: 0, y: 0 }, tr: { x: 0, y: 0 }, bl: { x: 0, y: 0 }, br: { x: 0, y: 0 },
@@ -201,7 +202,7 @@ const useCanvasDotSelector = (options = {}) => {
                 // Move 'shape' to the end of the array (top of the stack)
                 shapesArr.splice(i, 1)
                 shapesArr.push(shape)
-                setShapesArr(shapesArr)
+                // setShapesArr(shapesArr) // @todo - remove?
 
                 // Set the active shape and its coordinates
                 shape.set = false
@@ -245,19 +246,14 @@ const useCanvasDotSelector = (options = {}) => {
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
         if (!activeDraggingShape || !isMoveWithinBounds) return false
         if (isMoveWithinBounds) {
+
+            // @todo - Moving dots not working properly with scaling
             let dx = mx - activeDraggingShape.xx
             let dy = my - activeDraggingShape.yy
             activeDraggingShape.x += dx
             activeDraggingShape.y += dy
             drawCanvas()
         }
-    }
-
-    const loadImageIntoCanvas = (imageSrc) => {
-        const bgImage = new Image()
-        bgImage.src = imageSrc
-        setBgImage(bgImage)
-        drawCanvas()
     }
 
     const resizeCanvas = (canvas) => {
@@ -275,7 +271,7 @@ const useCanvasDotSelector = (options = {}) => {
     const drawCanvas = (options = {}) => {
         const { shapesOverride, ctx = canvasContext } = options
         let shapesArrInit = shapesArr
-        if (ctx) {
+        if (ctx && bgImage) {
 
             // Get canvas dimensions with device scale
             const { devicePixelRatio:ratio=1 } = window
@@ -402,8 +398,6 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     useEffect(() => {
-
-        // Attach "global" canvas element event listeners
         canvasRef.current.addEventListener('mouseenter', (e) => {
             document.body.style.overflow = 'hidden'
         })
@@ -416,10 +410,7 @@ const useCanvasDotSelector = (options = {}) => {
 
         // Set default styles
         canvasRef.current.style.touchAction = 'none'
-        canvasRef.current.style.backgroundColor = initBgColor
-
-        // Load initial background image
-        if (initBgImageSrc) loadImageIntoCanvas(initBgImageSrc)
+        canvasRef.current.style.backgroundColor = bgColor
 
         // Add initial shapes
         if (activeShapeKeys && activeShapeKeys.length) {
@@ -439,6 +430,21 @@ const useCanvasDotSelector = (options = {}) => {
     }, [activeShapeKeys])
 
     useEffect(() => {
+        const bgImageSrcTarget = bgImageSrc || bgImageLoadSrc
+        setBgImageLoadSrc(null)
+        if (bgImageLoadSrc) {
+            const randHash = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+            const bgImage = new Image()
+            const handleBgImageLoad = () => {
+                setBgImageLoadSrc(bgImageSrcTarget)
+                setBgImage(bgImage)
+            }
+            bgImage.addEventListener('load', handleBgImageLoad)
+            bgImage.src = bgImageSrcTarget + '?rand=' + randHash
+        }
+    }, [bgImageSrc, bgImageLoadSrc])
+
+    useEffect(() => {
 
         // Initialize canvas and device pixel density
         const canvas = canvasRef.current
@@ -449,14 +455,13 @@ const useCanvasDotSelector = (options = {}) => {
         }
 
         // Initialize shapes
-        if (Object.entries(shapes).length) {
+        if (Object.entries(shapes).length && (bgImageSrc || bgImageLoadSrc)) {
             drawCanvas({ shapesOverride: shapes })
         }
-    }, [canvasContext, shapes])
+    }, [canvasContext, bgImage, shapes])
 
     return {
         canvasRef,
-        loadImageIntoCanvas,
         handleMouseTouchMoveDotDown,
         handleMouseTouchMoveDotUp,
         handleMouseTouchMoveDotMove,
@@ -466,6 +471,7 @@ const useCanvasDotSelector = (options = {}) => {
         handleMouseTouchMoveImageEnd,
         handleMouseTouchMoveImageMove,
         handleMouseWheelZoom,
+        setBgImageLoadSrc,
         setActiveDots: activeShapeKeys => setActiveShapeKeys(activeShapeKeys),
         activeDot: activeDraggingShape,
         dots: trackingShapes,
