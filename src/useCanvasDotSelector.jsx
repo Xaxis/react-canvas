@@ -6,11 +6,9 @@ const useCanvasDotSelector = (options = {}) => {
         bgImageSrc = '',
         initDots = [],
         dotRadius = 10,
-        drawBgImageBox = false,
     } = options
     const canvasRef = useRef(null)
-    const [canvasContext, setCanvasContext] = useState(null)
-    const [globalOffsetCoords, setGlobalOffsetCoords] = useState({ x: 0, y: 0 })
+
     const [bgImage, setBgImage] = useState(null)
     const [bgImageLoadSrc, setBgImageLoadSrc] = useState(null)
     const [bgImageCoords, setBgImageCoords] = useState({ x: 0, y: 0, width: 0, height: 0 })
@@ -20,6 +18,7 @@ const useCanvasDotSelector = (options = {}) => {
     const [bgImageBoundingBoxCoords, setBgImageBoundingBoxCoords] = useState({
         x: 0, y: 0, width: 0, height: 0,
     })
+
     const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [defaultShapes, setDefaultShapes] = useState({
@@ -30,13 +29,16 @@ const useCanvasDotSelector = (options = {}) => {
         5: { key: 5, x: 100, y: 100, xx: 0, yy: 0, radius: dotRadius, color: 'magenta', set: false },
         6: { key: 6, x: 120, y: 120, xx: 0, yy: 0, radius: dotRadius, color: 'yellow', set: false },
     })
+
     const [zoomScale, setZoomScale] = useState(1)
     const [zoomInitialDistance, setZoomInitialDistance] = useState(0)
     const [zoomCurrentDistance, setZoomCurrentDistance] = useState(0)
+
     const [imageMoveStartCoords, setImageMoveStartCoords] = useState({ x: 0, y: 0 })
     const [imageMoveEndCoords, setImageMoveEndCoords] = useState({ x: 0, y: 0 })
     const [imageMoveOffsetCoords, setImageMoveOffsetCoords] = useState({ x: 0, y: 0 })
     const [imageMoveDragging, setImageMoveDragging] = useState(false)
+
     const [shapes, setShapes] = useState({})
     const [shapesArr, setShapesArr] = useState([])
     const [trackingShapes, setTrackingShapes] = useState({})
@@ -136,11 +138,10 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseTouchMoveImageMove = (e) => {
-        e.stopPropagation()
         if (canvasRef.current.style.cursor === 'default') {
             canvasRef.current.style.cursor = 'grab'
         }
-        if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1) return false
+        if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1) return
         let mx, my, dx, dy
         if (e.type === 'touchmove' && e.touches.length === 1) {
             const touch = e.touches[0]
@@ -176,9 +177,9 @@ const useCanvasDotSelector = (options = {}) => {
         }
 
         // Set offset coords and redraw the canvas
+        setImageMoveOffsetCoords({ x: dx, y: dy })
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
         if (!isMoveWithinBounds) return false
-        setImageMoveOffsetCoords({ x: dx, y: dy })
         drawCanvas()
     }
 
@@ -260,25 +261,9 @@ const useCanvasDotSelector = (options = {}) => {
         }
     }
 
-    const resizeCanvas = (canvas) => {
-        const { width, height } = canvas.getBoundingClientRect()
-        if (canvas.width !== width || canvas.height !== height) {
-            const { devicePixelRatio:ratio=1 } = window
-            canvas.width = width * ratio
-            canvas.height = height * ratio
-            canvasContext.scale(ratio, ratio)
-            return { deltaWidth: width, deltaHeight: height }
-        }
-        return false
-    }
-
     const drawCanvas = (options = {}) => {
-        const {
-            ctx = canvasContext,
-            shapesOverride,
-            zoomScaleOverride = zoomScale,
-        } = options
-        let shapesArrInit = shapesArr
+        const { zoomScaleOverride = zoomScale } = options
+        const ctx = canvasRef.current.getContext('2d', { alpha: false })
         if (ctx && bgImage) {
 
             // Get canvas dimensions with device scale
@@ -293,24 +278,23 @@ const useCanvasDotSelector = (options = {}) => {
             bgImage.width = newImgWidth
             bgImage.height = newImgHeight
 
-            // Get coordinates to center the image inside the canvas. These are calculated from the canvas dimensions
-            // and are used to track the offsets for the start of the relative coordinate system
-            const x = (canvasElmWidth - newImgWidth) / 2
-            const y = (canvasElmHeight - newImgHeight) / 2
-            setGlobalOffsetCoords({ x, y })
+            // Get coordinates of the centered- bg image inside the canvas. These are used to track the offsets for the
+            // start of the relative coordinate system
+            const bgImgOffsX = Math.floor((canvasElmWidth - newImgWidth) / 2)
+            const bgImgOffsY = Math.floor((canvasElmHeight - newImgHeight) / 2)
 
             // Set the bounding box coordinates
             setBgImageBoundingBoxPerimeter({
-                tl: { x, y: 0 },
-                tr: { x: x + newImgWidth, y: 0 },
-                bl: { x, y: newImgHeight },
-                br: { x: x + newImgWidth, y: newImgHeight },
+                tl: { x: bgImgOffsX, y: bgImgOffsY },
+                tr: { x: bgImgOffsX + newImgWidth, y: bgImgOffsY },
+                bl: { x: bgImgOffsX, y: bgImgOffsY + newImgHeight },
+                br: { x: bgImgOffsX + newImgWidth, y: bgImgOffsY + newImgHeight },
             })
 
             // Set the bounding box coordinates
             setBgImageBoundingBoxCoords({
-                x: x,
-                y: y,
+                x: bgImgOffsX,
+                y: bgImgOffsY,
                 width: newImgWidth,
                 height: newImgHeight
             })
@@ -323,60 +307,37 @@ const useCanvasDotSelector = (options = {}) => {
                 height: newImgHeight * zoomScaleOverride,
             })
 
-            // Set shapes array with override when passed directly as parameter
-            if (shapesOverride) {
-                shapesArrInit = Object.entries(shapesOverride).map(([key, shape]) => {
-                    return { ...shape, x: shape.x + x, y: shape.y }
-                })
-                setShapesArr(shapesArrInit)
-            }
+            // Get coordinate box for bg image
+            const bgImgX = bgImgOffsX + imageMoveOffsetCoords.x
+            const bgImgY = bgImgOffsY + imageMoveOffsetCoords.y
+            const bgImgWidth = newImgWidth * zoomScaleOverride
+            const bgImgHeight = newImgHeight * zoomScaleOverride
 
             // Clear canvas before redraw
             ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
 
-            // Clip the canvas to the background image and redraw the background image
+            // Clip to the bg image "bounding box"
             ctx.save()
-            ctx.rect(x, y, newImgWidth, newImgHeight)
+            ctx.rect(bgImgOffsX, bgImgOffsY, newImgWidth, newImgHeight)
             ctx.clip()
 
-            // Assign offset coordinates of the background image location in the canvas
-            const bgImgX = x + imageMoveOffsetCoords.x
-            const bgImgY = y + imageMoveOffsetCoords.y
-
-            // Draw background image
-            ctx.drawImage(bgImage, bgImgX, bgImgY, newImgWidth * zoomScaleOverride, newImgHeight * zoomScaleOverride)
-            ctx.restore()
-
-            // Draw a rectangle around the background image that appears 2 pixels thick
-            if (drawBgImageBox) {
-                ctx.beginPath()
-                ctx.moveTo(x - 2, 0)
-                ctx.lineTo(x + newImgWidth + 2, 0)
-                ctx.lineTo(x + newImgWidth + 2, newImgHeight - 1)
-                ctx.lineTo(x - 2, newImgHeight - 1)
-                ctx.lineTo(x - 2, -2)
-                ctx.strokeStyle = 'white'
-                ctx.stroke()
-            }
-
-            // Clip the canvas to the bg image again and redraw the shapes so the shapes are also clipped to the bg image
-            ctx.rect(x, y, newImgWidth, newImgHeight)
-            ctx.clip()
+            // Assign bg image coordinate space and draw the background image
+            ctx.drawImage(bgImage, Math.floor(bgImgX), Math.floor(bgImgY), Math.floor(bgImgWidth), Math.floor(bgImgHeight))
 
             // Draw shapes ("dots")
-            for (let i = 0; i < shapesArrInit.length; i++) {
-                let shape = shapesArrInit[i]
-                let shapeX = shape.x
-                let shapeY = shape.y
+            for (let i = 0; i < shapesArr.length; i++) {
+                let shape = shapesArr[i]
+                let shapeX = shape.x + bgImgOffsX
+                let shapeY = shape.y + bgImgOffsY
 
                 // Set opacity of set circles
                 if (shape.set) {
                     ctx.globalAlpha = 0.5
                 }
 
-                // Set shape coordinates relative to the background image coordinates, both its relative location in the canvas and it's zoom scale
-                shapeX = shape.xx = ((shapeX - x) * zoomScaleOverride) + x + imageMoveOffsetCoords.x
-                shapeY = shape.yy = ((shapeY - y) * zoomScaleOverride) + y + imageMoveOffsetCoords.y
+                // Set shape coordinates relative to the background image coordinates and zoom scale
+                shapeX = shape.xx = ((shapeX - bgImgOffsX) * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoords.x
+                shapeY = shape.yy = ((shapeY - bgImgOffsY) * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoords.y
 
                 // Draw white line circle
                 ctx.beginPath()
@@ -390,54 +351,45 @@ const useCanvasDotSelector = (options = {}) => {
                 ctx.fillStyle = shape.color
                 ctx.fill()
 
+                // Hack - For unknown reasons, the last shape is not clipped. This is a workaround adding a transparent
+                // context change as a non-existent last shape to solve for this issue.
+                if (i === shapesArr.length - 1) {
+                    ctx.beginPath()
+                    ctx.fillStyle = 'transparent'
+                    ctx.fill()
+                }
+
                 // Set opacity back to 1
                 ctx.globalAlpha = 1
             }
 
-            // Restore after clipping
+            // Restore after drawing shapes
             ctx.restore()
 
             // Update tracking shapes
-            const newTrackingShapes = {}
-            shapesArrInit.map((shape) => {
-                newTrackingShapes[shape.key] = { ...shape, x: shape.x - x, y: shape.y }
-                return { ...shape, x: shape.x - x, y: shape.y }
-            })
-            setTrackingShapes(newTrackingShapes)
+            // @todo - Rethink this approach
+            // const newTrackingShapes = {}
+            // shapesArrInit.map((shape) => {
+            //     newTrackingShapes[shape.key] = { ...shape, x: shape.x - bgImgOffsX, y: shape.y }
+            //     return { ...shape, x: shape.x - bgImgOffsX, y: shape.y - bgImgOffsY }
+            // })
+            // setTrackingShapes(newTrackingShapes)
         }
     }
 
-    useEffect(() => {
-        canvasRef.current.addEventListener('mouseenter', (e) => {
-            document.body.style.overflow = 'hidden'
-        })
-        canvasRef.current.addEventListener('mouseleave', (e) => {
-            document.body.style.overflow = 'auto'
-        })
-    }, [])
-
-    useEffect(() => {
-
-        // Set default styles
-        canvasRef.current.style.touchAction = 'none'
-        canvasRef.current.style.backgroundColor = bgColor
-
-        // Add initial shapes
-        if (activeShapeKeys && activeShapeKeys.length) {
-            const newShapes = activeShapeKeys.reduce((acc, key) => {
-                if (defaultShapes[key]) {
-                    acc[key] = defaultShapes[key]
-                }
-                return acc
-            }, {})
-            const newShapesKeys = Object.keys(newShapes)
-            const shapesKeys = Object.keys(shapes)
-            const shapesKeysDiff = newShapesKeys.filter((key) => !shapesKeys.includes(key))
-            if (shapesKeysDiff.length) {
-                setShapes(newShapes)
-            }
+    const resizeCanvas = () => {
+        const canvas = canvasRef.current
+        const ctx = canvas.getContext('2d', { alpha: false })
+        const { width, height } = canvas.getBoundingClientRect()
+        if (canvas.width !== width || canvas.height !== height) {
+            const { devicePixelRatio:ratio=1 } = window
+            canvas.width = width * ratio
+            canvas.height = height * ratio
+            ctx.scale(ratio, ratio)
+            return { deltaWidth: width, deltaHeight: height }
         }
-    }, [activeShapeKeys])
+        return false
+    }
 
     useEffect(() => {
         const bgImageSrcTarget = bgImageSrc || bgImageLoadSrc
@@ -454,19 +406,46 @@ const useCanvasDotSelector = (options = {}) => {
 
     useEffect(() => {
 
-        // Initialize canvas and device pixel density
-        const canvas = canvasRef.current
-        const context = canvas.getContext('2d')
-        setCanvasContext(context)
-        if (canvasContext) {
-            resizeCanvas(canvas)
+        // Set default styles
+        canvasRef.current.style.touchAction = 'none'
+        canvasRef.current.style.backgroundColor = bgColor
+
+        // Initialize event listeners
+        canvasRef.current.addEventListener('resize', resizeCanvas)
+        canvasRef.current.addEventListener('mouseenter', (e) => {
+            document.body.style.overflow = 'hidden'
+        })
+        canvasRef.current.addEventListener('mouseleave', (e) => {
+            document.body.style.overflow = 'auto'
+        })
+
+        // Add and initialize shapes
+        if (activeShapeKeys && activeShapeKeys.length) {
+            const newShapes = activeShapeKeys.reduce((acc, key) => {
+                if (defaultShapes[key]) {
+                    acc[key] = defaultShapes[key]
+                }
+                return acc
+            }, {})
+            const newShapesKeys = Object.keys(newShapes)
+            const shapesKeys = Object.keys(shapes)
+            const shapesKeysDiff = newShapesKeys.filter((key) => !shapesKeys.includes(key))
+            if (shapesKeysDiff.length) {
+                setShapes(newShapes)
+                setShapesArr(Object.entries(newShapes).map(([key, shape]) => ({ ...shape, key })))
+            }
         }
 
-        // Initialize shapes
-        if (Object.entries(shapes).length && (bgImageSrc || bgImageLoadSrc)) {
-            drawCanvas({ shapesOverride: shapes })
+        // Initialize canvas resize
+        resizeCanvas()
+        return () => canvasRef.current.removeEventListener('resize', resizeCanvas)
+    }, [])
+
+    useEffect(() => {
+        if (canvasRef.current && Object.entries(shapes).length && bgImage) {
+            drawCanvas()
         }
-    }, [canvasContext, bgImage, shapes])
+    }, [bgImage])
 
     return {
         canvasRef,
