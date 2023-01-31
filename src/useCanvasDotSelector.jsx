@@ -75,7 +75,9 @@ const useCanvasDotSelector = (options = {}) => {
         }
         setImageMoveOffsetCoords(updatedCoords)
         setImageMoveEndCoords(updatedCoords)
-        drawCanvas()
+        drawCanvas({
+            zoomScaleOverride: clampedZoomScale,
+        })
     }
 
     const handleTouchPinchZoomStart = (e) => {
@@ -134,10 +136,11 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseTouchMoveImageMove = (e) => {
+        e.stopPropagation()
         if (canvasRef.current.style.cursor === 'default') {
             canvasRef.current.style.cursor = 'grab'
         }
-        if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1) return
+        if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1) return false
         let mx, my, dx, dy
         if (e.type === 'touchmove' && e.touches.length === 1) {
             const touch = e.touches[0]
@@ -148,7 +151,6 @@ const useCanvasDotSelector = (options = {}) => {
             dx = x - startX + imageMoveEndCoords.x
             dy = y - startY + imageMoveEndCoords.y
         } else {
-            e.stopPropagation()
             mx = e.pageX - e.target.offsetLeft
             my = e.pageY - e.target.offsetTop
             const { pageX: x, pageY: y } = e
@@ -173,11 +175,10 @@ const useCanvasDotSelector = (options = {}) => {
             dy = imageMoveOffsetCoords.y + stopYPad
         }
 
-
         // Set offset coords and redraw the canvas
-        setImageMoveOffsetCoords({ x: dx, y: dy })
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
         if (!isMoveWithinBounds) return false
+        setImageMoveOffsetCoords({ x: dx, y: dy })
         drawCanvas()
     }
 
@@ -213,6 +214,7 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseTouchMoveDotUp = (e) => {
+        e.stopPropagation()
         if (canvasRef.current.style.cursor === 'move') {
             canvasRef.current.style.cursor = 'move'
         }
@@ -223,12 +225,14 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseTouchMoveDotMove = (e) => {
+        e.stopPropagation()
         let mx, my, mmx, mmy
         if (e.type === 'touchmove' && e.touches.length === 1) {
             let touch = e.touches[0]
             mx = touch.pageX - e.target.offsetLeft
             my = touch.pageY - e.target.offsetTop
         } else {
+            e.preventDefault()
             mx = mmx = e.pageX - e.target.offsetLeft
             my = mmy = e.pageY - e.target.offsetTop
             for (let i = 0; i < shapesArr.length; i++) {
@@ -269,7 +273,11 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const drawCanvas = (options = {}) => {
-        const { shapesOverride, ctx = canvasContext } = options
+        const {
+            ctx = canvasContext,
+            shapesOverride,
+            zoomScaleOverride = zoomScale,
+        } = options
         let shapesArrInit = shapesArr
         if (ctx && bgImage) {
 
@@ -311,8 +319,8 @@ const useCanvasDotSelector = (options = {}) => {
             setBgImageCoords({
                 x: imageMoveOffsetCoords.x,
                 y: imageMoveOffsetCoords.y,
-                width: newImgWidth * zoomScale,
-                height: newImgHeight * zoomScale,
+                width: newImgWidth * zoomScaleOverride,
+                height: newImgHeight * zoomScaleOverride,
             })
 
             // Set shapes array with override when passed directly as parameter
@@ -336,7 +344,7 @@ const useCanvasDotSelector = (options = {}) => {
             const bgImgY = y + imageMoveOffsetCoords.y
 
             // Draw background image
-            ctx.drawImage(bgImage, bgImgX, bgImgY, newImgWidth * zoomScale, newImgHeight * zoomScale)
+            ctx.drawImage(bgImage, bgImgX, bgImgY, newImgWidth * zoomScaleOverride, newImgHeight * zoomScaleOverride)
             ctx.restore()
 
             // Draw a rectangle around the background image that appears 2 pixels thick
@@ -366,9 +374,9 @@ const useCanvasDotSelector = (options = {}) => {
                     ctx.globalAlpha = 0.5
                 }
 
-                // Set shape coordinates relative to the background image coordinates, both it's relative location in the canvas and it's zoom scale
-                shapeX = shape.xx = ((shapeX - x) * zoomScale) + x + imageMoveOffsetCoords.x
-                shapeY = shape.yy = ((shapeY - y) * zoomScale) + y + imageMoveOffsetCoords.y
+                // Set shape coordinates relative to the background image coordinates, both its relative location in the canvas and it's zoom scale
+                shapeX = shape.xx = ((shapeX - x) * zoomScaleOverride) + x + imageMoveOffsetCoords.x
+                shapeY = shape.yy = ((shapeY - y) * zoomScaleOverride) + y + imageMoveOffsetCoords.y
 
                 // Draw white line circle
                 ctx.beginPath()
@@ -385,6 +393,8 @@ const useCanvasDotSelector = (options = {}) => {
                 // Set opacity back to 1
                 ctx.globalAlpha = 1
             }
+
+            // Restore after clipping
             ctx.restore()
 
             // Update tracking shapes
