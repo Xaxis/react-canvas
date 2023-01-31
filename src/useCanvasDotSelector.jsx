@@ -431,7 +431,6 @@ const useCanvasDotSelector = (options = {}) => {
 
     useEffect(() => {
         const bgImageSrcTarget = bgImageSrc || bgImageLoadSrc
-        setBgImageLoadSrc(null)
         if (bgImageSrcTarget) {
             const bgImage = new Image()
             const handleBgImageLoad = () => {
