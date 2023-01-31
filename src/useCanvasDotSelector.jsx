@@ -10,6 +10,7 @@ const useCanvasDotSelector = (options = {}) => {
     } = options
     const canvasRef = useRef(null)
     const [canvasContext, setCanvasContext] = useState(null)
+    const [globalOffsetCoords, setGlobalOffsetCoords] = useState({ x: 0, y: 0 })
     const [bgImage, setBgImage] = useState(null)
     const [bgImageCoords, setBgImageCoords] = useState({ x: 0, y: 0, width: 0, height: 0 })
     const [bgImageBoundingBoxPerimeter, setBgImageBoundingBoxPerimeter] = useState({
@@ -21,12 +22,12 @@ const useCanvasDotSelector = (options = {}) => {
     const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [defaultShapes, setDefaultShapes] = useState({
-        1: { key: 1, x: 20, y: 20, radius: dotRadius, color: 'red', rgb: '255,0,0', set: false },
-        2: { key: 2, x: 40, y: 40, radius: dotRadius, color: 'green', rgb: '0,255,0', set: false },
-        3: { key: 3, x: 60, y: 60, radius: dotRadius, color: 'blue', rgb: '0,0,255', set: false },
-        4: { key: 4, x: 80, y: 80, radius: dotRadius, color: 'cyan', rgb: '0,255,255', set: false },
-        5: { key: 5, x: 100, y: 100, radius: dotRadius, color: 'magenta', rgb: '255,0,255', set: false },
-        6: { key: 6, x: 120, y: 120, radius: dotRadius, color: 'yellow', rgb: '255,255,0', set: false },
+        1: { key: 1, x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false },
+        2: { key: 2, x: 40, y: 40, xx: 0, yy: 0, radius: dotRadius, color: 'green', set: false },
+        3: { key: 3, x: 60, y: 60, xx: 0, yy: 0, radius: dotRadius, color: 'blue', set: false },
+        4: { key: 4, x: 80, y: 80, xx: 0, yy: 0, radius: dotRadius, color: 'cyan', set: false },
+        5: { key: 5, x: 100, y: 100, xx: 0, yy: 0, radius: dotRadius, color: 'magenta', set: false },
+        6: { key: 6, x: 120, y: 120, xx: 0, yy: 0, radius: dotRadius, color: 'yellow', set: false },
     })
     const [zoomScale, setZoomScale] = useState(1)
     const [zoomInitialDistance, setZoomInitialDistance] = useState(0)
@@ -41,8 +42,8 @@ const useCanvasDotSelector = (options = {}) => {
 
     const handleMouseTouchShapeHitDetect = (mx, my, shape) => {
         if (shape.radius) {
-            let dx = mx - shape.x
-            let dy = my - shape.y
+            let dx = mx - shape.xx
+            let dy = my - shape.yy
             return (dx * dx + dy * dy) < (shape.radius + 10) * (shape.radius + 10)
         }
         return false
@@ -191,10 +192,6 @@ const useCanvasDotSelector = (options = {}) => {
             my = e.pageY - e.target.offsetTop
         }
 
-        // Compensate for image move location and zoom scale
-        mx = (mx - imageMoveOffsetCoords.x) / zoomScale
-        my = (my - imageMoveOffsetCoords.y) / zoomScale
-
         // Check if mouse is inside a shape
         for (let i = 0; i < shapesArr.length; i++) {
             let shape = shapesArr[i]
@@ -231,8 +228,8 @@ const useCanvasDotSelector = (options = {}) => {
             mx = touch.pageX - e.target.offsetLeft
             my = touch.pageY - e.target.offsetTop
         } else {
-            mx = mmx = ((e.pageX - e.target.offsetLeft) - imageMoveOffsetCoords.x) / zoomScale
-            my = mmy = ((e.pageY - e.target.offsetTop) - imageMoveOffsetCoords.y) / zoomScale
+            mx = mmx = e.pageX - e.target.offsetLeft
+            my = mmy = e.pageY - e.target.offsetTop
             for (let i = 0; i < shapesArr.length; i++) {
                 let shape = shapesArr[i]
                 if (handleMouseTouchShapeHitDetect(mmx, mmy, shape)) {
@@ -244,16 +241,12 @@ const useCanvasDotSelector = (options = {}) => {
             }
         }
 
-        // Compensate for image move location and zoom scale
-        mx = (mx - imageMoveOffsetCoords.x) / zoomScale
-        my = (my - imageMoveOffsetCoords.y) / zoomScale
-
         // Only proceed if within bounding box
         const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
         if (!activeDraggingShape || !isMoveWithinBounds) return false
         if (isMoveWithinBounds) {
-            let dx = mx - activeDraggingShape.x
-            let dy = my - activeDraggingShape.y
+            let dx = mx - activeDraggingShape.xx
+            let dy = my - activeDraggingShape.yy
             activeDraggingShape.x += dx
             activeDraggingShape.y += dy
             drawCanvas()
@@ -296,9 +289,11 @@ const useCanvasDotSelector = (options = {}) => {
             bgImage.width = newImgWidth
             bgImage.height = newImgHeight
 
-            // Get coordinates to center the image inside the canvas
+            // Get coordinates to center the image inside the canvas. These are calculated from the canvas dimensions
+            // and are used to track the offsets for the start of the relative coordinate system
             const x = (canvasElmWidth - newImgWidth) / 2
             const y = (canvasElmHeight - newImgHeight) / 2
+            setGlobalOffsetCoords({ x, y })
 
             // Set the bounding box coordinates
             setBgImageBoundingBoxPerimeter({
@@ -376,8 +371,8 @@ const useCanvasDotSelector = (options = {}) => {
                 }
 
                 // Set shape coordinates relative to the background image coordinates, both it's relative location in the canvas and it's zoom scale
-                shapeX = ((shapeX - x) * zoomScale) + x + imageMoveOffsetCoords.x
-                shapeY = ((shapeY - y) * zoomScale) + y + imageMoveOffsetCoords.y
+                shapeX = shape.xx = ((shapeX - x) * zoomScale) + x + imageMoveOffsetCoords.x
+                shapeY = shape.yy = ((shapeY - y) * zoomScale) + y + imageMoveOffsetCoords.y
 
                 // Draw white line circle
                 ctx.beginPath()
