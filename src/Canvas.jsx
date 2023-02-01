@@ -7,8 +7,8 @@ const CanvasDemo = (props) => {
         canvasRef,
         setBgImageLoadSrc,
         setActiveDots,
-        handleMouseTouchMoveDotDown,
-        handleMouseTouchMoveDotUp,
+        handleMouseTouchMoveDotStart,
+        handleMouseTouchMoveDotEnd,
         handleMouseTouchMoveDotMove,
         handleTouchPinchZoomStart,
         handleTouchPinchZoomMove,
@@ -44,15 +44,15 @@ const CanvasDemo = (props) => {
             ref={canvasRef}
             {...rest}
             onMouseDown={(e) => {
-                handleMouseTouchMoveDotDown(e)
+                handleMouseTouchMoveDotStart(e)
                 handleMouseTouchMoveImageStart(e)
             }}
             onMouseUp={(e) => {
-                handleMouseTouchMoveDotUp(e)
+                handleMouseTouchMoveDotEnd(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onMouseOut={(e) => {
-                handleMouseTouchMoveDotUp(e)
+                handleMouseTouchMoveDotEnd(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onMouseMove={(e) => {
@@ -60,16 +60,16 @@ const CanvasDemo = (props) => {
                 handleMouseTouchMoveImageMove(e)
             }}
             onTouchStart={(e) => {
-                handleMouseTouchMoveDotDown(e)
+                handleMouseTouchMoveDotStart(e)
                 handleTouchPinchZoomStart(e)
                 handleMouseTouchMoveImageStart(e)
             }}
             onTouchEnd={(e) => {
-                handleMouseTouchMoveDotUp(e)
+                handleMouseTouchMoveDotEnd(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onTouchCancel={(e) => {
-                handleMouseTouchMoveDotUp(e)
+                handleMouseTouchMoveDotEnd(e)
                 handleMouseTouchMoveImageEnd(e)
             }}
             onTouchMove={(e) => {
