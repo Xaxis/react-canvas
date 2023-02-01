@@ -220,7 +220,7 @@ const useCanvasDotSelector = (options = {}) => {
         if (!activeDraggingShape) return
         activeDraggingShape.set = true
         setActiveDraggingShape(null)
-        drawCanvas()
+        drawCanvas({ bgImageFilterOff: true })
     }
 
     const handleMouseTouchMoveDotMove = (e) => {
@@ -256,7 +256,10 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const drawCanvas = (options = {}) => {
-        const { zoomScaleOverride = zoomScale } = options
+        const {
+            zoomScaleOverride = zoomScale,
+            bgImageFilterOff = false
+        } = options
         const ctx = canvasRef.current.getContext('2d', { alpha: false })
         if (ctx && bgImage) {
 
@@ -317,7 +320,9 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.clip()
 
             // Assign bg image coordinate space and draw the background image
+            if (activeDraggingShape && !bgImageFilterOff) ctx.filter = 'saturate(0.25)'
             ctx.drawImage(bgImage, Math.floor(bgImgX), Math.floor(bgImgY), Math.floor(bgImgWidth), Math.floor(bgImgHeight))
+            ctx.filter = 'none'
 
             // Draw shapes ("dots")
             for (let i = 0; i < shapesArr.length; i++) {
