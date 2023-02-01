@@ -20,6 +20,7 @@ div.App > div.CanvasContainer {
   justify-content: center;
   align-items: center;
   flex-direction: column;
+  flex-grow: 1;
   width: 100%;
   height: 100%;
 }
@@ -27,10 +28,10 @@ div.App > div.CanvasContainer {
 div.App > div.CanvasContainer > canvas {
   width: 100%;
   height: 100%;
-  max-width: 900px;
+  max-width: 100%;
 }
 
 div.App > div.DummyContent {
-  width: 80%;
+  width: 100%;
   margin: 0 auto;
 }

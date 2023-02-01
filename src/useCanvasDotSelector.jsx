@@ -109,9 +109,16 @@ const useCanvasDotSelector = (options = {}) => {
             const currentZoomScale = zoomScale + (delta * 0.0005)
 
             // Clamp zoom scale to min and max value
-            const clampedZoomScale = Math.min(Math.max(currentZoomScale, 1), 4)
+            const clampedZoomScale = Math.min(Math.max(currentZoomScale, 1), 6)
+            const clampedZoomScaleOffset = (clampedZoomScale - 1) / 6
+            const updatedCoords = {
+                x: imageMoveOffsetCoords.x * clampedZoomScaleOffset,
+                y: imageMoveOffsetCoords.y * clampedZoomScaleOffset
+            }
+            setImageMoveOffsetCoords(updatedCoords)
+            setImageMoveEndCoords(updatedCoords)
             setZoomScale(clampedZoomScale)
-            drawCanvas()
+            drawCanvas({ zoomScaleOverride: clampedZoomScale })
         }
     }
 
@@ -320,7 +327,7 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.clip()
 
             // Assign bg image coordinate space and draw the background image
-            if (activeDraggingShape && !bgImageFilterOff) ctx.filter = 'saturate(0.25)'
+            if (activeDraggingShape && !bgImageFilterOff) ctx.filter = 'saturate(0.2)'
             ctx.drawImage(bgImage, Math.floor(bgImgX), Math.floor(bgImgY), Math.floor(bgImgWidth), Math.floor(bgImgHeight))
             ctx.filter = 'none'
 
