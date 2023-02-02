@@ -8,9 +8,6 @@ const CanvasDemo = (props) => {
         dotsState,
         setDotsState,
         setBgImageLoadSrc,
-
-        // setActiveDots, // @todo
-
         handleMouseTouchMoveDotStart,
         handleMouseTouchMoveDotEnd,
         handleMouseTouchMoveDotMove,
@@ -31,8 +28,9 @@ const CanvasDemo = (props) => {
      * Demonstrate changing/loading a new background image.
      */
     useEffect(() => {
-        // setBgImageLoadSrc('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80')
-        // setBgImageLoadSrc('https://www.thenews.com.pk/assets/uploads/tns/2015-03-15/558241_5306933_tns.jpg')
+        // setTimeout(() => {
+        //     setBgImageLoadSrc('https://www.thenews.com.pk/assets/uploads/tns/2015-03-15/558241_5306933_tns.jpg')
+        // }, 2000)
     }, [])
 
     /**
@@ -40,26 +38,22 @@ const CanvasDemo = (props) => {
      */
     useEffect(() => {
         // console.log('dotsState', dotsState)
+        if (Object.entries(dotsState).length) {
+            // console.log('dotsState.b', dotsState.b)
+        }
     }, [dotsState])
-
-    /**
-     * @todo ... Do we need this anymore?
-     */
-    useEffect(() => {
-        // setTimeout(() => {
-        //     setActiveDots([1, 2, 3, 4, 5, 6])
-        // }, 3000)
-    }, [])
 
     return (
         <canvas
             ref={canvasRef}
             {...rest}
 
-            // Demonstrate changing state properties of a dot.
+            // Demonstrate changing dot state
             onDoubleClick={(e) => {
-                dotsState.b.show = false
-                setDotsState(dotsState)
+
+                // Change state of 'b' (blue) dot
+                // dotsState.b.show = false
+                // setDotsState(dotsState)
             }}
 
             onMouseDown={(e) => {

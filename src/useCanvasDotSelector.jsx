@@ -398,23 +398,25 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const setShapesState = (shapesStateObj) => {
-        const newShapesStateObj = { ...shapesStateObj }
-        console.log(newShapesStateObj.b, newShapesStateObj.b.show)
-        setShapes(newShapesStateObj)
-        setShapesArr(Object.entries(newShapesStateObj).map(([key, shape]) => ({ ...shape })))
+        setShapes(shapesStateObj)
+        setShapesArr(Object.entries(shapesStateObj).map(([key, shape]) => ({ ...shape })))
         drawCanvas()
     }
 
     useEffect(() => {
-        const bgImageSrcTarget = bgImageSrc || bgImageLoadSrc
+        const bgImageSrcTarget = bgImageLoadSrc || bgImageSrc
         if (bgImageSrcTarget) {
             const bgImage = new Image()
             const handleBgImageLoad = () => {
                 setBgImageLoadSrc(bgImageSrcTarget)
                 setBgImage(bgImage)
+                return false
             }
             bgImage.addEventListener('load', handleBgImageLoad)
             bgImage.src = bgImageSrcTarget
+            return () => {
+                bgImage.removeEventListener('load', handleBgImageLoad)
+            }
         }
     }, [bgImageSrc, bgImageLoadSrc])
 
@@ -450,9 +452,14 @@ const useCanvasDotSelector = (options = {}) => {
 
         // Initialize canvas resize
         resizeCanvas()
+
+        // Cleanup
         return () => canvasRef.current.removeEventListener('resize', resizeCanvas)
     }, [])
 
+    /**
+     * Redraw canvas on bgImage change.
+     */
     useEffect(() => {
         if (canvasRef.current && Object.entries(shapes).length && bgImage) {
             drawCanvas()
@@ -464,9 +471,6 @@ const useCanvasDotSelector = (options = {}) => {
         dotsState: trackingShapes,
         setDotsState: setShapesState,
         setBgImageLoadSrc,
-
-        // setActiveDots: initialShapeKeys => setInitialShapeKeys(initialShapeKeys), // @todo
-
         handleMouseTouchMoveDotStart,
         handleMouseTouchMoveDotEnd,
         handleMouseTouchMoveDotMove,
