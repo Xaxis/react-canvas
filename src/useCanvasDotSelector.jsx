@@ -29,19 +29,18 @@ const useCanvasDotSelector = (options = {}) => {
     const [imageMoveOffsetCoords, setImageMoveOffsetCoords] = useState({ x: 0, y: 0 })
     const [imageMoveDragging, setImageMoveDragging] = useState(false)
 
-    const [activeShapeKeys, setActiveShapeKeys] = useState(initDots)
-    const [activeDraggingShape, setActiveDraggingShape] = useState(null)
-
     const [shapes, setShapes] = useState({})
     const [defaultShapes, setDefaultShapes] = useState({
-        1: { key: 1, x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false },
-        2: { key: 2, x: 40, y: 40, xx: 0, yy: 0, radius: dotRadius, color: 'green', set: false },
-        3: { key: 3, x: 60, y: 60, xx: 0, yy: 0, radius: dotRadius, color: 'blue', set: false },
-        4: { key: 4, x: 80, y: 80, xx: 0, yy: 0, radius: dotRadius, color: 'cyan', set: false },
-        5: { key: 5, x: 100, y: 100, xx: 0, yy: 0, radius: dotRadius, color: 'magenta', set: false },
-        6: { key: 6, x: 120, y: 120, xx: 0, yy: 0, radius: dotRadius, color: 'yellow', set: false },
+        r: { key: 'r', x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false, show: true },
+        g: { key: 'g', x: 40, y: 40, xx: 0, yy: 0, radius: dotRadius, color: 'green', set: false, show: true },
+        b: { key: 'b', x: 60, y: 60, xx: 0, yy: 0, radius: dotRadius, color: 'blue', set: false, show: true },
+        c: { key: 'c', x: 80, y: 80, xx: 0, yy: 0, radius: dotRadius, color: 'cyan', set: false, show: true },
+        m: { key: 'm', x: 100, y: 100, xx: 0, yy: 0, radius: dotRadius, color: 'magenta', set: false, show: true },
+        y: { key: 'y', x: 120, y: 120, xx: 0, yy: 0, radius: dotRadius, color: 'yellow', set: false, show: true },
     })
     const [shapesArr, setShapesArr] = useState([])
+    const [initialShapeKeys, setInitialShapeKeys] = useState(initDots)
+    const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [trackingShapes, setTrackingShapes] = useState({})
 
     const handleMouseTouchShapeHitDetect = (mx, my, shape) => {
@@ -335,6 +334,9 @@ const useCanvasDotSelector = (options = {}) => {
             for (let i = 0; i < shapesArr.length; i++) {
                 let shape = shapesArr[i]
 
+                // Hide shape if set to hidden
+                if (!shape.show) continue
+
                 // Set opacity of set circles
                 if (shape.set) {
                     ctx.globalAlpha = 0.5
@@ -372,13 +374,12 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.restore()
 
             // Update tracking shapes
-            // @todo - Rethink this approach
-            // const newTrackingShapes = {}
-            // shapesArrInit.map((shape) => {
-            //     newTrackingShapes[shape.key] = { ...shape, x: shape.x - bgImgOffsX, y: shape.y }
-            //     return { ...shape, x: shape.x - bgImgOffsX, y: shape.y - bgImgOffsY }
-            // })
-            // setTrackingShapes(newTrackingShapes)
+            const newTrackingShapes = {}
+            shapesArr.map((shape) => {
+                newTrackingShapes[shape.key] = { ...shape }
+                return shape
+            })
+            setTrackingShapes(newTrackingShapes)
         }
     }
 
@@ -394,6 +395,14 @@ const useCanvasDotSelector = (options = {}) => {
             return { deltaWidth: width, deltaHeight: height }
         }
         return false
+    }
+
+    const setShapesState = (shapesStateObj) => {
+        const newShapesStateObj = { ...shapesStateObj }
+        console.log(newShapesStateObj.b, newShapesStateObj.b.show)
+        setShapes(newShapesStateObj)
+        setShapesArr(Object.entries(newShapesStateObj).map(([key, shape]) => ({ ...shape })))
+        drawCanvas()
     }
 
     useEffect(() => {
@@ -425,11 +434,9 @@ const useCanvasDotSelector = (options = {}) => {
         })
 
         // Add and initialize shapes
-        if (activeShapeKeys && activeShapeKeys.length) {
-            const newShapes = activeShapeKeys.reduce((acc, key) => {
-                if (defaultShapes[key]) {
-                    acc[key] = defaultShapes[key]
-                }
+        if (initialShapeKeys && initialShapeKeys.length) {
+            const newShapes = initialShapeKeys.reduce((acc, key) => {
+                if (defaultShapes[key]) acc[key] = defaultShapes[key]
                 return acc
             }, {})
             const newShapesKeys = Object.keys(newShapes)
@@ -454,6 +461,12 @@ const useCanvasDotSelector = (options = {}) => {
 
     return {
         canvasRef,
+        dotsState: trackingShapes,
+        setDotsState: setShapesState,
+        setBgImageLoadSrc,
+
+        // setActiveDots: initialShapeKeys => setInitialShapeKeys(initialShapeKeys), // @todo
+
         handleMouseTouchMoveDotStart,
         handleMouseTouchMoveDotEnd,
         handleMouseTouchMoveDotMove,
@@ -462,11 +475,7 @@ const useCanvasDotSelector = (options = {}) => {
         handleMouseTouchMoveImageStart,
         handleMouseTouchMoveImageEnd,
         handleMouseTouchMoveImageMove,
-        handleMouseWheelZoom,
-        setBgImageLoadSrc,
-        setActiveDots: activeShapeKeys => setActiveShapeKeys(activeShapeKeys),
-        activeDot: activeDraggingShape,
-        dots: trackingShapes,
+        handleMouseWheelZoom
     }
 }
 

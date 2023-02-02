@@ -5,8 +5,12 @@ const CanvasDemo = (props) => {
     const { ...rest } = props
     const {
         canvasRef,
+        dotsState,
+        setDotsState,
         setBgImageLoadSrc,
-        setActiveDots,
+
+        // setActiveDots, // @todo
+
         handleMouseTouchMoveDotStart,
         handleMouseTouchMoveDotEnd,
         handleMouseTouchMoveDotMove,
@@ -15,34 +19,49 @@ const CanvasDemo = (props) => {
         handleMouseTouchMoveImageStart,
         handleMouseTouchMoveImageEnd,
         handleMouseTouchMoveImageMove,
-        handleMouseWheelZoom,
-        activeDot,
-        dots
+        handleMouseWheelZoom
     } = useCanvasDotSelector({
         bgColor: '#000000',
         bgImageSrc: 'https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80',
-        initDots: [1, 2, 3],
+        initDots: ['r', 'g', 'b'],
         dotRadius: 8
     })
 
-    // useEffect(() => {
-    //     // setBgImageLoadSrc('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80')
-    //     // setBgImageLoadSrc('https://www.thenews.com.pk/assets/uploads/tns/2015-03-15/558241_5306933_tns.jpg')
-    //     // setTimeout(() => {
-    //     //     setActiveDots([1, 2, 3, 4, 5, 6])
-    //     // }, 3000)
-    // }, [])
-    //
-    // useEffect(() => {
-    //     if (1 in dots) {
-    //         // console.log(dots[1])
-    //     }
-    // }, [dots])
+    /**
+     * Demonstrate changing/loading a new background image.
+     */
+    useEffect(() => {
+        // setBgImageLoadSrc('https://images.unsplash.com/photo-1501386761578-eac5c94b800a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=2070&q=80')
+        // setBgImageLoadSrc('https://www.thenews.com.pk/assets/uploads/tns/2015-03-15/558241_5306933_tns.jpg')
+    }, [])
+
+    /**
+     * Demonstrate changing state properties of a dot.
+     */
+    useEffect(() => {
+        // console.log('dotsState', dotsState)
+    }, [dotsState])
+
+    /**
+     * @todo ... Do we need this anymore?
+     */
+    useEffect(() => {
+        // setTimeout(() => {
+        //     setActiveDots([1, 2, 3, 4, 5, 6])
+        // }, 3000)
+    }, [])
 
     return (
         <canvas
             ref={canvasRef}
             {...rest}
+
+            // Demonstrate changing state properties of a dot.
+            onDoubleClick={(e) => {
+                dotsState.b.show = false
+                setDotsState(dotsState)
+            }}
+
             onMouseDown={(e) => {
                 handleMouseTouchMoveDotStart(e)
                 handleMouseTouchMoveImageStart(e)
