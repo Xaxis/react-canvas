@@ -1,3 +1,3 @@
-# react-canvas
+# react-canvas-dot-selector
 
-Demo code working with a canvas component inside of React.
+A simple canvas dot selector hook and component for React.
