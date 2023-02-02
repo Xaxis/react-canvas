@@ -285,8 +285,8 @@ const useCanvasDotSelector = (options = {}) => {
             const aspectRatio = bgImage.width / bgImage.height
             const newImgWidth = canvasElmHeight * aspectRatio
             const newImgHeight = canvasElmHeight
-            // bgImage.width = newImgWidth      // @todo - Does this need to be set?
-            // bgImage.height = newImgHeight    // @todo - Does this need to be set?
+            bgImage.width = newImgWidth      // @todo - Causes image to grow in size. Fix!
+            bgImage.height = newImgHeight    // @todo - Causes image to grow in size. Fix!
 
             // Get coordinates of the centered- bg image inside the canvas. These are used to track the offsets for the
             // start of the relative coordinate system
@@ -344,9 +344,17 @@ const useCanvasDotSelector = (options = {}) => {
                 // Hide shape if set to hidden
                 if (!shape.show) continue
 
+                // Set outer glow of active shape
+                if (activeDraggingShape && activeDraggingShape.key === shape.key) {
+                    ctx.shadowBlur = 10
+                    ctx.shadowColor = '#FFFF33'
+                }
+
                 // Set opacity of set circles
                 if (shape.set) {
                     ctx.globalAlpha = 0.5
+                    ctx.shadowBlur = 0
+                    ctx.shadowColor = 'transparent'
                 }
 
                 // Set shape coordinates relative to the background image coordinates and zoom scale
