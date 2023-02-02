@@ -39,7 +39,7 @@ const CanvasDemo = (props) => {
     useEffect(() => {
         // console.log('dotsState', dotsState)
         if (Object.entries(dotsState).length) {
-            // console.log('dotsState.b', dotsState.b)
+            console.log('dotsState.b', dotsState.b)
         }
     }, [dotsState])
 

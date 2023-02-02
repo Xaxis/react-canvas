@@ -377,7 +377,11 @@ const useCanvasDotSelector = (options = {}) => {
             // Update tracking shapes
             const newTrackingShapes = {}
             shapesArrOverride.map((shape) => {
-                newTrackingShapes[shape.key] = { ...shape }
+                newTrackingShapes[shape.key] = {
+                    ...shape,
+                    xp: Math.round((shape.x / bgImage.width) * 10000) / 10000,
+                    yp: Math.round((shape.y / bgImage.height) * 10000) / 10000,
+                }
                 return shape
             })
             setTrackingShapes(newTrackingShapes)
@@ -399,7 +403,12 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const setShapesState = (shapesStateObj) => {
-        setShapes({ ...shapesStateObj })
+        const newShapes = {}
+        Object.entries(shapesStateObj).map(([key, shape]) => {
+            newShapes[key] = { ...shapes[key], ...shape }
+            return shape
+        })
+        setShapes(newShapes)
         const newShapesArr = Object.entries(shapesStateObj).map(([key, shape]) => ({ ...shape }))
         setShapesArr(newShapesArr)
         drawCanvas({ shapesArrOverride: newShapesArr })
