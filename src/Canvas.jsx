@@ -52,8 +52,8 @@ const CanvasDemo = (props) => {
             onDoubleClick={(e) => {
 
                 // Change state of 'b' (blue) dot
-                // dotsState.b.show = false
-                // setDotsState(dotsState)
+                dotsState.b.show = false
+                setDotsState(dotsState)
             }}
 
             onMouseDown={(e) => {

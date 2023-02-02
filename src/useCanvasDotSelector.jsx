@@ -263,6 +263,7 @@ const useCanvasDotSelector = (options = {}) => {
 
     const drawCanvas = (options = {}) => {
         const {
+            shapesArrOverride = shapesArr,
             zoomScaleOverride = zoomScale,
             bgImageFilterOff = false
         } = options
@@ -331,8 +332,8 @@ const useCanvasDotSelector = (options = {}) => {
             ctx.filter = 'none'
 
             // Draw shapes ("dots")
-            for (let i = 0; i < shapesArr.length; i++) {
-                let shape = shapesArr[i]
+            for (let i = 0; i < shapesArrOverride.length; i++) {
+                let shape = shapesArrOverride[i]
 
                 // Hide shape if set to hidden
                 if (!shape.show) continue
@@ -360,7 +361,7 @@ const useCanvasDotSelector = (options = {}) => {
 
                 // Hack - For unknown reasons, the last shape is not clipped. This is a workaround adding a transparent
                 // context change as a non-existent last shape to solve for this issue.
-                if (i === shapesArr.length - 1) {
+                if (i === shapesArrOverride.length - 1) {
                     ctx.beginPath()
                     ctx.fillStyle = 'transparent'
                     ctx.fill()
@@ -375,7 +376,7 @@ const useCanvasDotSelector = (options = {}) => {
 
             // Update tracking shapes
             const newTrackingShapes = {}
-            shapesArr.map((shape) => {
+            shapesArrOverride.map((shape) => {
                 newTrackingShapes[shape.key] = { ...shape }
                 return shape
             })
@@ -398,9 +399,10 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const setShapesState = (shapesStateObj) => {
-        setShapes(shapesStateObj)
-        setShapesArr(Object.entries(shapesStateObj).map(([key, shape]) => ({ ...shape })))
-        drawCanvas()
+        setShapes({ ...shapesStateObj })
+        const newShapesArr = Object.entries(shapesStateObj).map(([key, shape]) => ({ ...shape }))
+        setShapesArr(newShapesArr)
+        drawCanvas({ shapesArrOverride: newShapesArr })
     }
 
     useEffect(() => {
