@@ -142,10 +142,6 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseTouchMoveImageMove = (e) => {
-        if (canvasRef.current.style.cursor === 'default') {
-            canvasRef.current.style.cursor = 'grab'
-        }
-        if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1) return
         let mx, my, dx, dy
         if (e.type === 'touchmove' && e.touches.length === 1) {
             const touch = e.touches[0]
@@ -164,6 +160,18 @@ const useCanvasDotSelector = (options = {}) => {
             dy = y - startY + imageMoveEndCoords.y
         }
 
+        // Perform bg image bounding box check
+        const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
+
+        if (canvasRef.current.style.cursor === 'default' && isMoveWithinBounds) {
+            canvasRef.current.style.cursor = 'grab'
+        } else if (!isMoveWithinBounds) {
+            canvasRef.current.style.cursor = 'not-allowed'
+        }
+
+        // Cancel event checks
+        if (!imageMoveDragging || activeDraggingShape || zoomScale <= 1 || !isMoveWithinBounds) return false
+
         // Keep movement of image within bounds of bounding box
         const { width: bgImageW, height: bgImageH } = bgImageCoords
         const { width: bgBoundW, height: bgBoundH } = bgImageBoundingBoxCoords
@@ -181,8 +189,6 @@ const useCanvasDotSelector = (options = {}) => {
         }
 
         // Set offset coords and redraw the canvas
-        const isMoveWithinBounds = handleMouseTouchInsideBgImageBoundingBoxHitDetect(mx, my)
-        if (!isMoveWithinBounds) return false
         drawCanvas()
         setImageMoveOffsetCoords({ x: dx, y: dy })
     }
@@ -279,8 +285,8 @@ const useCanvasDotSelector = (options = {}) => {
             const aspectRatio = bgImage.width / bgImage.height
             const newImgWidth = canvasElmHeight * aspectRatio
             const newImgHeight = canvasElmHeight
-            bgImage.width = newImgWidth
-            bgImage.height = newImgHeight
+            // bgImage.width = newImgWidth      // @todo - Does this need to be set?
+            // bgImage.height = newImgHeight    // @todo - Does this need to be set?
 
             // Get coordinates of the centered- bg image inside the canvas. These are used to track the offsets for the
             // start of the relative coordinate system
@@ -414,6 +420,9 @@ const useCanvasDotSelector = (options = {}) => {
         drawCanvas({ shapesArrOverride: newShapesArr })
     }
 
+    /**
+     * Load/change background image.
+     */
     useEffect(() => {
         const bgImageSrcTarget = bgImageLoadSrc || bgImageSrc
         if (bgImageSrcTarget) {
@@ -431,6 +440,18 @@ const useCanvasDotSelector = (options = {}) => {
         }
     }, [bgImageSrc, bgImageLoadSrc])
 
+    /**
+     * Redraw canvas on bgImage load.
+     */
+    useEffect(() => {
+        if (canvasRef.current && Object.entries(shapes).length && bgImage) {
+            drawCanvas()
+        }
+    }, [bgImage])
+
+    /**
+     * Canvas and Dot Selector initialization.
+     */
     useEffect(() => {
 
         // Set default styles
@@ -467,15 +488,6 @@ const useCanvasDotSelector = (options = {}) => {
         // Cleanup
         return () => canvasRef.current.removeEventListener('resize', resizeCanvas)
     }, [])
-
-    /**
-     * Redraw canvas on bgImage change.
-     */
-    useEffect(() => {
-        if (canvasRef.current && Object.entries(shapes).length && bgImage) {
-            drawCanvas()
-        }
-    }, [bgImage])
 
     return {
         canvasRef,

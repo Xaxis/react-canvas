@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import useCanvasDotSelector from './useCanvasDotSelector'
 
-const CanvasDemo = (props) => {
+const CanvasDotSelector = (props) => {
     const { ...rest } = props
     const {
         canvasRef,
@@ -39,7 +39,7 @@ const CanvasDemo = (props) => {
     useEffect(() => {
         // console.log('dotsState', dotsState)
         if (Object.entries(dotsState).length) {
-            console.log('dotsState.b', dotsState.b)
+            // console.log('dotsState.b', dotsState.b)
         }
     }, [dotsState])
 
@@ -97,4 +97,4 @@ const CanvasDemo = (props) => {
     )
 }
 
-export default CanvasDemo
+export default CanvasDotSelector

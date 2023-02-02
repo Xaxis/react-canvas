@@ -1,12 +1,12 @@
 import React from 'react'
-import Canvas from './Canvas'
+import CanvasDotSelector from './CanvasDotSelector'
 
 function App() {
 
     return (
         <div className="App">
             <div className="CanvasContainer">
-                <Canvas/>
+                <CanvasDotSelector />
             </div>
             <div className="DummyContent">
                 <h1>Lorem ipsum</h1>
