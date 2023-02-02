@@ -8,6 +8,7 @@ const useCanvasDotSelector = (options = {}) => {
         dotRadius = 10,
     } = options
     const canvasRef = useRef(null)
+    const [resizeScale, setResizeScale] = useState({ x: 1, y: 1 })
 
     const [bgImage, setBgImage] = useState(null)
     const [bgImageLoadSrc, setBgImageLoadSrc] = useState(null)
@@ -285,8 +286,6 @@ const useCanvasDotSelector = (options = {}) => {
             const aspectRatio = bgImage.width / bgImage.height
             const newImgWidth = canvasElmHeight * aspectRatio
             const newImgHeight = canvasElmHeight
-            bgImage.width = newImgWidth      // @todo - Causes image to grow in size. Fix!
-            bgImage.height = newImgHeight    // @todo - Causes image to grow in size. Fix!
 
             // Get coordinates of the centered- bg image inside the canvas. These are used to track the offsets for the
             // start of the relative coordinate system
@@ -403,17 +402,13 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const resizeCanvas = () => {
-        const canvas = canvasRef.current
-        const ctx = canvas.getContext('2d', { alpha: false })
-        const { width, height } = canvas.getBoundingClientRect()
-        if (canvas.width !== width || canvas.height !== height) {
-            const { devicePixelRatio:ratio=1 } = window
-            canvas.width = width * ratio
-            canvas.height = height * ratio
-            ctx.scale(ratio, ratio)
-            return { deltaWidth: width, deltaHeight: height }
-        }
-        return false
+        const ctx = canvasRef.current.getContext('2d', { alpha: false })
+        const { width, height } = canvasRef.current.getBoundingClientRect()
+        const { devicePixelRatio:ratio=1 } = window
+        canvasRef.current.width = width * ratio
+        canvasRef.current.height = height * ratio
+        setResizeScale({ x: ratio, y: ratio })
+        ctx.scale(ratio, ratio)
     }
 
     const setShapesState = (shapesStateObj) => {
@@ -467,7 +462,7 @@ const useCanvasDotSelector = (options = {}) => {
         canvasRef.current.style.backgroundColor = bgColor
 
         // Initialize event listeners
-        canvasRef.current.addEventListener('resize', resizeCanvas)
+        window.addEventListener('resize', resizeCanvas)
         canvasRef.current.addEventListener('mouseenter', (e) => {
             document.body.style.overflow = 'hidden'
         })
@@ -494,8 +489,15 @@ const useCanvasDotSelector = (options = {}) => {
         resizeCanvas()
 
         // Cleanup
-        return () => canvasRef.current.removeEventListener('resize', resizeCanvas)
+        return () => window.removeEventListener('resize', resizeCanvas)
     }, [])
+
+    /**
+     * Redraw canvas on resize scale change.
+     */
+    useEffect(() => {
+        drawCanvas()
+    }, [resizeScale])
 
     return {
         canvasRef,
