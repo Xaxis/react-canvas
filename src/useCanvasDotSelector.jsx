@@ -97,12 +97,17 @@ const useCanvasDotSelector = (options = {}) => {
 
         // If mouse isn't inside the bounding box, don't zoom
         if (!handleMouseTouchInsideBgImageBoundingBoxHitDetect(x, y)) {
+            document.body.style.overflow = 'auto'
             return false
+        } else {
+            document.body.style.overflow = 'hidden'
         }
 
         // Zoom centered around the mouse position
-        // console.log(x, y) // @todo
+        updatedCoords.x += (x - (x * clampedZoomScale)) / clampedZoomScale
+        updatedCoords.y += (y - (y * clampedZoomScale)) / clampedZoomScale
 
+        // Update state
         setZoomScale(clampedZoomScale)
         setImageMoveOffsetCoords(updatedCoords)
         setImageMoveEndCoords(updatedCoords)
@@ -146,6 +151,23 @@ const useCanvasDotSelector = (options = {}) => {
                 x: imageMoveOffsetCoords.x * clampedZoomScaleOffset,
                 y: imageMoveOffsetCoords.y * clampedZoomScaleOffset
             }
+
+            // Get the touch point positions relative to the canvas
+            const { left, top } = canvasRef.current.getBoundingClientRect()
+            const x1Canvas = x1 - left
+            const y1Canvas = y1 - top
+            const x2Canvas = x2 - left
+            const y2Canvas = y2 - top
+
+            // Get the average of the two touch points
+            const x = (x1Canvas + x2Canvas) / 2
+            const y = (y1Canvas + y2Canvas) / 2
+
+            // Zoom centered around the average of the two touch points
+            updatedCoords.x += (x - (x * clampedZoomScale)) / clampedZoomScale
+            updatedCoords.y += (y - (y * clampedZoomScale)) / clampedZoomScale
+
+            // Update state
             setImageMoveOffsetCoords(updatedCoords)
             setImageMoveEndCoords(updatedCoords)
             setZoomScale(clampedZoomScale)
