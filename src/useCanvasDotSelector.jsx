@@ -297,10 +297,16 @@ const useCanvasDotSelector = (options = {}) => {
             const canvasElmWidth = ctx.canvas.width / resizeScaleRatio.x
             const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
 
-            // Scale image dimensions to fit canvas and maintain aspect ratio
-            const aspectRatio = bgImage.width / bgImage.height
-            const newImgWidth = canvasElmHeight * aspectRatio
-            const newImgHeight = canvasElmHeight
+            // Scale image dimensions to fit within the browser window width and maintain aspect ratio
+            let aspectRatio = bgImage.width / bgImage.height
+            let newImgWidth = canvasElmWidth
+            let newImgHeight = canvasElmWidth / aspectRatio
+
+            // Prevent image height from exceeding the canvas height
+            if (newImgHeight > canvasElmHeight) {
+                newImgWidth = canvasElmHeight * aspectRatio
+                newImgHeight = canvasElmHeight
+            }
 
             // Get coordinates of the centered bg image inside the canvas. These are used to track the offsets for the
             // start of the relative coordinate system
@@ -535,10 +541,23 @@ const useCanvasDotSelector = (options = {}) => {
     useEffect(() => {
         if (Object.keys(trackingShapes).length) {
             const ctx = canvasRef.current.getContext('2d', { alpha: false })
+            const canvasElmWidth = ctx.canvas.width / resizeScaleRatio.x
             const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
-            const aspectRatio = bgImage.width / bgImage.height
-            const newImgWidth = canvasElmHeight * aspectRatio
-            const newImgHeight = canvasElmHeight
+
+            // @todo - Switch aspect ratio calculation to use width instead of height
+            // const aspectRatio = bgImage.width / bgImage.height
+            // const newImgWidth = canvasElmHeight * aspectRatio
+            // const newImgHeight = canvasElmHeight
+
+            // Scale coordinates within canvas dimensions
+            let aspectRatio = bgImage.width / bgImage.height
+            let newImgWidth = canvasElmWidth
+            let newImgHeight = canvasElmWidth / aspectRatio
+            if (newImgHeight > canvasElmHeight) {
+                newImgWidth = canvasElmHeight * aspectRatio
+                newImgHeight = canvasElmHeight
+            }
+
             const newShapesObj = {}
             const newShapesArr = Object.entries(trackingShapes).map(([key, shape]) => {
                 newShapesObj[key] = {
