@@ -408,20 +408,15 @@ const useCanvasDotSelector = (options = {}) => {
                 let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoords.x)
                 let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoords.y)
 
-                // Draw white line circle // @todo - Fix this, dots are SUPER SMALL on small screens
-                // const resizeRescaleRadiusWithBorder = resizeScaleRatio.x > 1 ? (shape.radius + 2) * (1 / resizeScaleRatio.x) : shape.radius + 2
-                // const resizeRescaleRadius = resizeScaleRatio.x > 1 ? shape.radius * (1 / resizeScaleRatio.x) : shape.radius
-                const resizeRescaleRadiusWithBorder = shape.radius + 2
-                const resizeRescaleRadius = shape.radius
-
+                // Draw circle (outline)
                 ctx.beginPath()
-                ctx.arc(shapeX, shapeY, resizeRescaleRadiusWithBorder, 0, Math.PI * 2)
+                ctx.arc(shapeX, shapeY, shape.radius + 2, 0, Math.PI * 2)
                 ctx.fillStyle = 'white'
                 ctx.fill()
 
                 // Draw circle (dot)
                 ctx.beginPath()
-                ctx.arc(shapeX, shapeY, resizeRescaleRadius, 0, Math.PI * 2)
+                ctx.arc(shapeX, shapeY, shape.radius, 0, Math.PI * 2)
                 ctx.fillStyle = shape.color
                 ctx.fill()
 
@@ -462,7 +457,7 @@ const useCanvasDotSelector = (options = {}) => {
             canvasRef.current.width = width * ratio
             canvasRef.current.height = height * ratio
             setResizeScaleRatio({ x: ratio, y: ratio })
-            ctx.scale(ratio, ratio) // @todo - What does scaling here accomplish?. Verify
+            ctx.scale(ratio, ratio)
         }
     }
 
@@ -541,15 +536,10 @@ const useCanvasDotSelector = (options = {}) => {
     useEffect(() => {
         if (Object.keys(trackingShapes).length) {
             const ctx = canvasRef.current.getContext('2d', { alpha: false })
-            const canvasElmWidth = ctx.canvas.width / resizeScaleRatio.x
-            const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
-
-            // @todo - Switch aspect ratio calculation to use width instead of height
-            // const aspectRatio = bgImage.width / bgImage.height
-            // const newImgWidth = canvasElmHeight * aspectRatio
-            // const newImgHeight = canvasElmHeight
 
             // Scale coordinates within canvas dimensions
+            const canvasElmWidth = ctx.canvas.width / resizeScaleRatio.x
+            const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
             let aspectRatio = bgImage.width / bgImage.height
             let newImgWidth = canvasElmWidth
             let newImgHeight = canvasElmWidth / aspectRatio
@@ -558,6 +548,7 @@ const useCanvasDotSelector = (options = {}) => {
                 newImgHeight = canvasElmHeight
             }
 
+            // Update shape coordinates
             const newShapesObj = {}
             const newShapesArr = Object.entries(trackingShapes).map(([key, shape]) => {
                 newShapesObj[key] = {
