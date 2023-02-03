@@ -80,7 +80,6 @@ const useCanvasDotSelector = (options = {}) => {
             zoom += 0.1
         }
         const clampedZoomScale = Math.min(Math.max(zoom, 1), 6)
-        setZoomScale(clampedZoomScale)
 
         // While zooming out, set imageMoveOffsetCoords closer to 0 the closer clampedZoomScale gets to 1
         // We do this so it stays within the constraints of the bounding box when zooming back out after moving it
@@ -89,6 +88,22 @@ const useCanvasDotSelector = (options = {}) => {
             x: imageMoveOffsetCoords.x * clampedZoomScaleOffset,
             y: imageMoveOffsetCoords.y * clampedZoomScaleOffset
         }
+
+        // Get the mouse position relative to the canvas
+        const { clientX: mx, clientY: my } = e
+        const { left, top } = canvasRef.current.getBoundingClientRect()
+        const x = mx - left
+        const y = my - top
+
+        // If mouse isn't inside the bounding box, don't zoom
+        if (!handleMouseTouchInsideBgImageBoundingBoxHitDetect(x, y)) {
+            return false
+        }
+
+        // Zoom centered around the mouse position
+        // console.log(x, y) // @todo
+
+        setZoomScale(clampedZoomScale)
         setImageMoveOffsetCoords(updatedCoords)
         setImageMoveEndCoords(updatedCoords)
         drawCanvas({
