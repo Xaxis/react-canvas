@@ -294,7 +294,6 @@ const useCanvasDotSelector = (options = {}) => {
         if (ctx && bgImage) {
 
             // Get canvas dimensions
-            const { devicePixelRatio:ratio=1 } = window
             const canvasElmWidth = ctx.canvas.width / resizeScaleRatio.x
             const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
 
@@ -459,26 +458,6 @@ const useCanvasDotSelector = (options = {}) => {
             setResizeScaleRatio({ x: ratio, y: ratio })
             ctx.scale(ratio, ratio) // @todo - What does scaling here accomplish?. Verify
         }
-        return false
-
-        // Update dot locations based on tracking shapes object using the xp/yp (percentage) values
-        // to recalculate their new x/y (pixel) values
-        // if (!trackingShapes) return
-        // const newShapes = {}
-        // Object.entries(trackingShapes).map(([key, shape]) => {
-        //     newShapes[key] = {
-        //         ...shape,
-        //         x: Math.round((shape.xp * width) * ratio),
-        //         y: Math.round((shape.yp * height) * ratio),
-        //     }
-        //     return shape
-        // })
-        // // setShapes(newShapes)
-        //
-        // // Update the shapesArr to reflect the new shapes object
-        // const newShapesArr = Object.values(newShapes)
-        // console.log('newShapesArr', newShapesArr)
-        // setShapesArr(newShapesArr)
     }
 
     /**
@@ -543,7 +522,7 @@ const useCanvasDotSelector = (options = {}) => {
             }
         }
 
-        // Initialize canvas resize
+        // Initialize resize of canvas
         resizeCanvas()
 
         // Cleanup
@@ -551,10 +530,30 @@ const useCanvasDotSelector = (options = {}) => {
     }, [])
 
     /**
-     * Redraw canvas on resize scale change.
+     * Redraw canvas on resize change after updating relative values of dot coordinates.
      */
     useEffect(() => {
-        drawCanvas()
+        if (Object.keys(trackingShapes).length) {
+            const ctx = canvasRef.current.getContext('2d', { alpha: false })
+            const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
+            const aspectRatio = bgImage.width / bgImage.height
+            const newImgWidth = canvasElmHeight * aspectRatio
+            const newImgHeight = canvasElmHeight
+            const newShapesObj = {}
+            const newShapesArr = Object.entries(trackingShapes).map(([key, shape]) => {
+                newShapesObj[key] = {
+                    ...shape,
+                    x: Math.round(shape.xp * newImgWidth),
+                    y: Math.round(shape.yp * newImgHeight),
+                }
+                return newShapesObj[key]
+            })
+            setShapes(newShapesObj)
+            setShapesArr(newShapesArr)
+            drawCanvas({ shapesArrOverride: newShapesArr })
+        } else {
+            drawCanvas()
+        }
     }, [resizeScaleRatio])
 
     return {

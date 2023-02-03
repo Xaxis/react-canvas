@@ -40,7 +40,7 @@ const CanvasDotSelector = (props) => {
     useEffect(() => {
         if (Object.entries(dotsState).length) {
             const { xp, yp, x, y } = dotsState.b
-            console.log('xp: ', xp, 'yp: ', yp, 'x: ', x, 'y: ', y)
+            // console.log('xp: ', xp, 'yp: ', yp, 'x: ', x, 'y: ', y)
         }
     }, [dotsState])
 
