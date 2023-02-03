@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/react-canvas-dot-selector/static/css/main.1c8d9a5d.css",
-    "main.js": "/react-canvas-dot-selector/static/js/main.344a6b6b.js",
+    "main.js": "/react-canvas-dot-selector/static/js/main.c2010c77.js",
     "index.html": "/react-canvas-dot-selector/index.html",
     "main.1c8d9a5d.css.map": "/react-canvas-dot-selector/static/css/main.1c8d9a5d.css.map",
-    "main.344a6b6b.js.map": "/react-canvas-dot-selector/static/js/main.344a6b6b.js.map"
+    "main.c2010c77.js.map": "/react-canvas-dot-selector/static/js/main.c2010c77.js.map"
   },
   "entrypoints": [
     "static/css/main.1c8d9a5d.css",
-    "static/js/main.344a6b6b.js"
+    "static/js/main.c2010c77.js"
   ]
 }
