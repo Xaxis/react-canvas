@@ -295,11 +295,12 @@ const useCanvasDotSelector = (options = {}) => {
             const canvasElmHeight = ctx.canvas.height / ratio
 
             // Scale image to maintain its aspect ratio with its height equal to the canvas height
+            // @todo - Scaling by ratio SOMEWHT fixes the resize scale issue. But it's still not perfect
             const aspectRatio = bgImage.width / bgImage.height
-            const newImgWidth = canvasElmHeight * aspectRatio
-            const newImgHeight = canvasElmHeight
+            const newImgWidth = canvasElmHeight * aspectRatio * ratio
+            const newImgHeight = canvasElmHeight * ratio
 
-            // Get coordinates of the centered- bg image inside the canvas. These are used to track the offsets for the
+            // Get coordinates of the centered bg image inside the canvas. These are used to track the offsets for the
             // start of the relative coordinate system
             const bgImgOffsX = Math.floor((canvasElmWidth - newImgWidth) / 2)
             const bgImgOffsY = Math.floor((canvasElmHeight - newImgHeight) / 2)
@@ -372,14 +373,9 @@ const useCanvasDotSelector = (options = {}) => {
                 let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoords.x)
                 let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoords.y)
 
-                // @todo - Make work with resize scale ratio
-                // const calcResizeScaleX = (newImgWidth * resizeScaleRatio.x) - newImgWidth
-                // const calcResizeScaleY = (newImgHeight * resizeScaleRatio.y) - newImgHeight
-                // console.log(resizeScaleRatio, calcResizeScaleX, calcResizeScaleY)
-
                 // Draw white line circle
-                const resizeRescaleRadiusWithBorder = resizeScaleRatio.x > 1 ? (shape.radius + 2) * (1 / resizeScaleRatio.x) : shape.radius + 2 // @todo
-                const resizeRescaleRadius = resizeScaleRatio.x > 1 ? shape.radius * (1 / resizeScaleRatio.x) : shape.radius // @todo
+                const resizeRescaleRadiusWithBorder = resizeScaleRatio.x > 1 ? (shape.radius + 2) * (1 / resizeScaleRatio.x) : shape.radius + 2
+                const resizeRescaleRadius = resizeScaleRatio.x > 1 ? shape.radius * (1 / resizeScaleRatio.x) : shape.radius
                 ctx.beginPath()
                 ctx.arc(shapeX, shapeY, resizeRescaleRadiusWithBorder, 0, Math.PI * 2)
                 ctx.fillStyle = 'white'
