@@ -107,6 +107,21 @@ const useCanvasDotSelector = (options = {}) => {
         updatedCoords.x += (x - (x * clampedZoomScale)) / clampedZoomScale
         updatedCoords.y += (y - (y * clampedZoomScale)) / clampedZoomScale
 
+        // Make sure clampedZoomScale is within the constraints of the bounding box
+        const { tl, tr, bl, br } = bgImageBoundingBoxPerimeter
+
+        // Get width and height of the bounding box
+        const w = tr.x - tl.x
+        const h = bl.y - tl.y
+
+        // Guarantee coordinate clamping forced to bounding box
+        if ((h * clampedZoomScale) < bgImageCoords.height) {
+            updatedCoords.y = 0
+        }
+        if ((w * clampedZoomScale) < bgImageCoords.width) {
+            updatedCoords.x = 0
+        }
+
         // Update state
         setZoomScale(clampedZoomScale)
         setImageMoveOffsetCoords(updatedCoords)
