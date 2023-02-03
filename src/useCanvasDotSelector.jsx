@@ -9,7 +9,10 @@ const useCanvasDotSelector = (options = {}) => {
         showGrid = false,
     } = options
     const canvasRef = useRef(null)
-    const [resizeScaleRatio, setResizeScaleRatio] = useState({ x: 1, y: 1 })
+    const [resizeScaleRatio, setResizeScaleRatio] = useState({
+        x: window.devicePixelRatio=1,
+        y: window.devicePixelRatio=1
+    })
 
     const [bgImage, setBgImage] = useState(null)
     const [bgImageLoadSrc, setBgImageLoadSrc] = useState(null)
@@ -292,8 +295,8 @@ const useCanvasDotSelector = (options = {}) => {
 
             // Get canvas dimensions
             const { devicePixelRatio:ratio=1 } = window
-            const canvasElmWidth = ctx.canvas.width
-            const canvasElmHeight = ctx.canvas.height
+            const canvasElmWidth = ctx.canvas.width / resizeScaleRatio.x
+            const canvasElmHeight = ctx.canvas.height / resizeScaleRatio.y
 
             // Scale image dimensions to fit canvas and maintain aspect ratio
             const aspectRatio = bgImage.width / bgImage.height
@@ -400,9 +403,12 @@ const useCanvasDotSelector = (options = {}) => {
                 let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoords.x)
                 let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoords.y)
 
-                // Draw white line circle
-                const resizeRescaleRadiusWithBorder = resizeScaleRatio.x > 1 ? (shape.radius + 2) * (1 / resizeScaleRatio.x) : shape.radius + 2
-                const resizeRescaleRadius = resizeScaleRatio.x > 1 ? shape.radius * (1 / resizeScaleRatio.x) : shape.radius
+                // Draw white line circle // @todo - Fix this, dots are SUPER SMALL on small screens
+                // const resizeRescaleRadiusWithBorder = resizeScaleRatio.x > 1 ? (shape.radius + 2) * (1 / resizeScaleRatio.x) : shape.radius + 2
+                // const resizeRescaleRadius = resizeScaleRatio.x > 1 ? shape.radius * (1 / resizeScaleRatio.x) : shape.radius
+                const resizeRescaleRadiusWithBorder = shape.radius + 2
+                const resizeRescaleRadius = shape.radius
+
                 ctx.beginPath()
                 ctx.arc(shapeX, shapeY, resizeRescaleRadiusWithBorder, 0, Math.PI * 2)
                 ctx.fillStyle = 'white'
@@ -434,8 +440,8 @@ const useCanvasDotSelector = (options = {}) => {
             shapesArrOverride.map((shape) => {
                 newTrackingShapes[shape.key] = {
                     ...shape,
-                    xp: Math.round((shape.x / bgImage.width) * 10000) / 10000,
-                    yp: Math.round((shape.y / bgImage.height) * 10000) / 10000,
+                    xp: Math.round((shape.x / newImgWidth) * 10000) / 10000,
+                    yp: Math.round((shape.y / newImgHeight) * 10000) / 10000,
                 }
                 return shape
             })
@@ -447,10 +453,32 @@ const useCanvasDotSelector = (options = {}) => {
         const ctx = canvasRef.current.getContext('2d', { alpha: false })
         const { width, height } = canvasRef.current.getBoundingClientRect()
         const { devicePixelRatio:ratio=1 } = window
-        canvasRef.current.width = width * ratio
-        canvasRef.current.height = height * ratio
-        setResizeScaleRatio({ x: ratio, y: ratio })
-        // ctx.scale(ratio, ratio) // @todo
+        if (canvasRef.current.width !== width || canvasRef.current.height !== height) {
+            canvasRef.current.width = width * ratio
+            canvasRef.current.height = height * ratio
+            setResizeScaleRatio({ x: ratio, y: ratio })
+            ctx.scale(ratio, ratio) // @todo - What does scaling here accomplish?. Verify
+        }
+        return false
+
+        // Update dot locations based on tracking shapes object using the xp/yp (percentage) values
+        // to recalculate their new x/y (pixel) values
+        // if (!trackingShapes) return
+        // const newShapes = {}
+        // Object.entries(trackingShapes).map(([key, shape]) => {
+        //     newShapes[key] = {
+        //         ...shape,
+        //         x: Math.round((shape.xp * width) * ratio),
+        //         y: Math.round((shape.yp * height) * ratio),
+        //     }
+        //     return shape
+        // })
+        // // setShapes(newShapes)
+        //
+        // // Update the shapesArr to reflect the new shapes object
+        // const newShapesArr = Object.values(newShapes)
+        // console.log('newShapesArr', newShapesArr)
+        // setShapesArr(newShapesArr)
     }
 
     /**

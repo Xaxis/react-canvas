@@ -38,9 +38,9 @@ const CanvasDotSelector = (props) => {
      * Demonstrate changing state properties of a dot.
      */
     useEffect(() => {
-        // console.log('dotsState', dotsState)
         if (Object.entries(dotsState).length) {
-            // console.log('dotsState.b', dotsState.b)
+            const { xp, yp, x, y } = dotsState.b
+            console.log('xp: ', xp, 'yp: ', yp, 'x: ', x, 'y: ', y)
         }
     }, [dotsState])
 
