@@ -49,12 +49,12 @@ const CanvasDotSelector = (props) => {
             {...rest}
 
             // Demonstrate changing dot state
-            onDoubleClick={(e) => {
-
-                // Change state of 'b' (blue) dot
-                dotsState.b.show = false
-                setDotsState(dotsState)
-            }}
+            // onDoubleClick={(e) => {
+            //
+            //     // Change state of 'b' (blue) dot
+            //     dotsState.b.show = false
+            //     setDotsState(dotsState)
+            // }}
 
             onMouseDown={(e) => {
                 handleMouseTouchMoveDotStart(e)

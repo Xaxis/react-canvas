@@ -8,7 +8,7 @@ const useCanvasDotSelector = (options = {}) => {
         dotRadius = 10,
     } = options
     const canvasRef = useRef(null)
-    const [resizeScale, setResizeScale] = useState({ x: 1, y: 1 })
+    const [resizeScaleRatio, setResizeScaleRatio] = useState({ x: 1, y: 1 })
 
     const [bgImage, setBgImage] = useState(null)
     const [bgImageLoadSrc, setBgImageLoadSrc] = useState(null)
@@ -44,6 +44,18 @@ const useCanvasDotSelector = (options = {}) => {
     const [activeDraggingShape, setActiveDraggingShape] = useState(null)
     const [trackingShapes, setTrackingShapes] = useState({})
 
+    const setShapesState = (shapesStateObj) => {
+        const newShapes = {}
+        Object.entries(shapesStateObj).map(([key, shape]) => {
+            newShapes[key] = { ...shapes[key], ...shape }
+            return shape
+        })
+        setShapes(newShapes)
+        const newShapesArr = Object.entries(shapesStateObj).map(([key, shape]) => ({ ...shape }))
+        setShapesArr(newShapesArr)
+        drawCanvas({ shapesArrOverride: newShapesArr })
+    }
+
     const handleMouseTouchShapeHitDetect = (mx, my, shape) => {
         let dx = mx - shape.xx
         let dy = my - shape.yy
@@ -57,7 +69,7 @@ const useCanvasDotSelector = (options = {}) => {
 
     const handleMouseWheelZoom = (e) => {
         let zoom = zoomScale
-        const {deltaY: delta} = e
+        const { deltaY: delta } = e
         if (delta > 0) {
             zoom -= 0.1
         } else {
@@ -277,7 +289,7 @@ const useCanvasDotSelector = (options = {}) => {
         const ctx = canvasRef.current.getContext('2d', { alpha: false })
         if (ctx && bgImage) {
 
-            // Get canvas dimensions with device scale
+            // Get canvas dimensions
             const { devicePixelRatio:ratio=1 } = window
             const canvasElmWidth = ctx.canvas.width / ratio
             const canvasElmHeight = ctx.canvas.height / ratio
@@ -360,15 +372,22 @@ const useCanvasDotSelector = (options = {}) => {
                 let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoords.x)
                 let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoords.y)
 
+                // @todo - Make work with resize scale ratio
+                // const calcResizeScaleX = (newImgWidth * resizeScaleRatio.x) - newImgWidth
+                // const calcResizeScaleY = (newImgHeight * resizeScaleRatio.y) - newImgHeight
+                // console.log(resizeScaleRatio, calcResizeScaleX, calcResizeScaleY)
+
                 // Draw white line circle
+                const resizeRescaleRadiusWithBorder = resizeScaleRatio.x > 1 ? (shape.radius + 2) * (1 / resizeScaleRatio.x) : shape.radius + 2 // @todo
+                const resizeRescaleRadius = resizeScaleRatio.x > 1 ? shape.radius * (1 / resizeScaleRatio.x) : shape.radius // @todo
                 ctx.beginPath()
-                ctx.arc(shapeX, shapeY, shape.radius + 2, 0, Math.PI * 2)
+                ctx.arc(shapeX, shapeY, resizeRescaleRadiusWithBorder, 0, Math.PI * 2)
                 ctx.fillStyle = 'white'
                 ctx.fill()
 
                 // Draw circle (dot)
                 ctx.beginPath()
-                ctx.arc(shapeX, shapeY, shape.radius, 0, Math.PI * 2)
+                ctx.arc(shapeX, shapeY, resizeRescaleRadius, 0, Math.PI * 2)
                 ctx.fillStyle = shape.color
                 ctx.fill()
 
@@ -407,20 +426,8 @@ const useCanvasDotSelector = (options = {}) => {
         const { devicePixelRatio:ratio=1 } = window
         canvasRef.current.width = width * ratio
         canvasRef.current.height = height * ratio
-        setResizeScale({ x: ratio, y: ratio })
+        setResizeScaleRatio({ x: ratio, y: ratio })
         ctx.scale(ratio, ratio)
-    }
-
-    const setShapesState = (shapesStateObj) => {
-        const newShapes = {}
-        Object.entries(shapesStateObj).map(([key, shape]) => {
-            newShapes[key] = { ...shapes[key], ...shape }
-            return shape
-        })
-        setShapes(newShapes)
-        const newShapesArr = Object.entries(shapesStateObj).map(([key, shape]) => ({ ...shape }))
-        setShapesArr(newShapesArr)
-        drawCanvas({ shapesArrOverride: newShapesArr })
     }
 
     /**
@@ -497,7 +504,7 @@ const useCanvasDotSelector = (options = {}) => {
      */
     useEffect(() => {
         drawCanvas()
-    }, [resizeScale])
+    }, [resizeScaleRatio])
 
     return {
         canvasRef,
