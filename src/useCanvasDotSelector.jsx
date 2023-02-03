@@ -369,13 +369,13 @@ const useCanvasDotSelector = (options = {}) => {
                 }
 
                 // Draw box used to display the grid coordinates
-                if (activeDraggingShape) {
-                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
-                    ctx.fillRect(Math.floor(bgImgX), Math.floor(bgImgY), 100, 20)
-                    ctx.fillStyle = 'white'
-                    ctx.font = '12px Arial'
-                    ctx.fillText(`x: ${Math.floor(activeDraggingShape.x)}, y: ${Math.floor(activeDraggingShape.y)}`, Math.floor(bgImgX + 5), Math.floor(bgImgY + 15))
-                }
+                const xInfoBoxCoord = activeDraggingShape ? activeDraggingShape.x : 0
+                const yInfoBoxCoord = activeDraggingShape ? activeDraggingShape.y : 0
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+                ctx.fillRect(Math.floor(bgImgOffsX), Math.floor(bgImgOffsY), 100, 20)
+                ctx.fillStyle = 'white'
+                ctx.font = '12px Arial'
+                ctx.fillText(`x: ${Math.floor(xInfoBoxCoord)}, y: ${Math.floor(yInfoBoxCoord)}`, Math.floor(bgImgOffsX + 5), Math.floor(bgImgOffsY + 15))
             }
 
             // Draw shapes ("dots")
