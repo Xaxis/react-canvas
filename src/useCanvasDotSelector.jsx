@@ -114,11 +114,16 @@ const useCanvasDotSelector = (options = {}) => {
         const w = tr.x - tl.x
         const h = bl.y - tl.y
 
+        // Determine if zooming in or out
+        const zoomingIn = clampedZoomScale > zoomScale
+
         // Guarantee coordinate clamping forced to bounding box
-        if ((h * clampedZoomScale) < bgImageCoords.height) {
+        const bufferY = 50
+        const bufferX = 50
+        if ((((h * clampedZoomScale) + Math.abs(updatedCoords.y) - bufferY) < bgImageCoords.height) && !zoomingIn) {
             updatedCoords.y = 0
         }
-        if ((w * clampedZoomScale) < bgImageCoords.width) {
+        if ((w * clampedZoomScale) + bufferX < bgImageCoords.width && !zoomingIn) {
             updatedCoords.x = 0
         }
 
