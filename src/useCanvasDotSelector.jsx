@@ -6,6 +6,7 @@ const useCanvasDotSelector = (options = {}) => {
         bgImageSrc = '',
         initDots = [],
         dotRadius = 10,
+        showGrid = false,
     } = options
     const canvasRef = useRef(null)
     const [resizeScaleRatio, setResizeScaleRatio] = useState({ x: 1, y: 1 })
@@ -291,14 +292,13 @@ const useCanvasDotSelector = (options = {}) => {
 
             // Get canvas dimensions
             const { devicePixelRatio:ratio=1 } = window
-            const canvasElmWidth = ctx.canvas.width / ratio
-            const canvasElmHeight = ctx.canvas.height / ratio
+            const canvasElmWidth = ctx.canvas.width
+            const canvasElmHeight = ctx.canvas.height
 
-            // Scale image to maintain its aspect ratio with its height equal to the canvas height
-            // @todo - Scaling by ratio SOMEWHT fixes the resize scale issue. But it's still not perfect
+            // Scale image dimensions to fit canvas and maintain aspect ratio
             const aspectRatio = bgImage.width / bgImage.height
-            const newImgWidth = canvasElmHeight * aspectRatio * ratio
-            const newImgHeight = canvasElmHeight * ratio
+            const newImgWidth = canvasElmHeight * aspectRatio
+            const newImgHeight = canvasElmHeight
 
             // Get coordinates of the centered bg image inside the canvas. These are used to track the offsets for the
             // start of the relative coordinate system
@@ -348,6 +348,33 @@ const useCanvasDotSelector = (options = {}) => {
             if (activeDraggingShape && !bgImageFilterOff) ctx.filter = 'saturate(0.2)'
             ctx.drawImage(bgImage, Math.floor(bgImgX), Math.floor(bgImgY), Math.floor(bgImgWidth), Math.floor(bgImgHeight))
             ctx.filter = 'none'
+
+            // Draw a grid over the background image that accounts for the zoom scale override and image move offset
+            if (showGrid) {
+                ctx.strokeStyle = 'rgba(255, 20, 147, 0.75)'
+                ctx.lineWidth = 1
+                for (let i = 0; i < bgImgWidth; i += 50) {
+                    ctx.beginPath()
+                    ctx.moveTo(Math.floor(bgImgX + i), Math.floor(bgImgY))
+                    ctx.lineTo(Math.floor(bgImgX + i), Math.floor(bgImgY + bgImgHeight))
+                    ctx.stroke()
+                }
+                for (let i = 0; i < bgImgHeight; i += 50) {
+                    ctx.beginPath()
+                    ctx.moveTo(Math.floor(bgImgX), Math.floor(bgImgY + i))
+                    ctx.lineTo(Math.floor(bgImgX + bgImgWidth), Math.floor(bgImgY + i))
+                    ctx.stroke()
+                }
+
+                // Draw box used to display the grid coordinates
+                if (activeDraggingShape) {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.5)'
+                    ctx.fillRect(Math.floor(bgImgX), Math.floor(bgImgY), 100, 20)
+                    ctx.fillStyle = 'white'
+                    ctx.font = '12px Arial'
+                    ctx.fillText(`x: ${Math.floor(activeDraggingShape.x)}, y: ${Math.floor(activeDraggingShape.y)}`, Math.floor(bgImgX + 5), Math.floor(bgImgY + 15))
+                }
+            }
 
             // Draw shapes ("dots")
             for (let i = 0; i < shapesArrOverride.length; i++) {
@@ -423,7 +450,7 @@ const useCanvasDotSelector = (options = {}) => {
         canvasRef.current.width = width * ratio
         canvasRef.current.height = height * ratio
         setResizeScaleRatio({ x: ratio, y: ratio })
-        ctx.scale(ratio, ratio)
+        // ctx.scale(ratio, ratio) // @todo
     }
 
     /**
