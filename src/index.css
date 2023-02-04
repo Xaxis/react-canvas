@@ -27,7 +27,7 @@ div.App > div.CanvasContainer {
   justify-content: center;
   align-items: center;
   width: 100%;
-  height: 400px;
+  height: 300px;
 }
 
 div.App > div.CanvasContainer > canvas {

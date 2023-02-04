@@ -133,6 +133,7 @@ const useCanvasDotSelector = (options = {}) => {
         setImageMoveEndCoords(updatedCoords)
         drawCanvas({
             zoomScaleOverride: clampedZoomScale,
+            imageMoveOffsetCoordsOverride: updatedCoords,
         })
     }
 
@@ -345,6 +346,7 @@ const useCanvasDotSelector = (options = {}) => {
         const {
             shapesArrOverride = shapesArr,
             zoomScaleOverride = zoomScale,
+            imageMoveOffsetCoordsOverride = imageMoveOffsetCoords,
             bgImageFilterOff = false
         } = options
         const ctx = canvasRef.current.getContext('2d', { alpha: false })
@@ -389,15 +391,15 @@ const useCanvasDotSelector = (options = {}) => {
 
             // Store the background image coordinates
             setBgImageCoords({
-                x: imageMoveOffsetCoords.x,
-                y: imageMoveOffsetCoords.y,
+                x: imageMoveOffsetCoordsOverride.x,
+                y: imageMoveOffsetCoordsOverride.y,
                 width: newImgWidth * zoomScaleOverride,
                 height: newImgHeight * zoomScaleOverride,
             })
 
             // Get coordinate box for bg image
-            const bgImgX = bgImgOffsX + imageMoveOffsetCoords.x
-            const bgImgY = bgImgOffsY + imageMoveOffsetCoords.y
+            const bgImgX = bgImgOffsX + imageMoveOffsetCoordsOverride.x
+            const bgImgY = bgImgOffsY + imageMoveOffsetCoordsOverride.y
             const bgImgWidth = newImgWidth * zoomScaleOverride
             const bgImgHeight = newImgHeight * zoomScaleOverride
 
@@ -462,8 +464,8 @@ const useCanvasDotSelector = (options = {}) => {
                 }
 
                 // Set shape coordinates relative to the background image coordinates and zoom scale
-                let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoords.x)
-                let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoords.y)
+                let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoordsOverride.x)
+                let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoordsOverride.y)
 
                 // Draw circle (outline)
                 ctx.beginPath()
