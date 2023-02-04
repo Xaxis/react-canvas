@@ -34,8 +34,3 @@ div.App > div.CanvasContainer > canvas {
   width: 100%;
   height: 100%;
 }
-
-div.App > div.DummyContent {
-  width: 100%;
-  margin: 0 auto;
-}
