@@ -7,6 +7,7 @@ const useCanvasDotSelector = (options = {}) => {
         initDots = [],
         dotRadius = 10,
         showGrid = false,
+        disableZoom = false,
     } = options
     const canvasRef = useRef(null)
     const [resizeScaleRatio, setResizeScaleRatio] = useState({
@@ -72,6 +73,7 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleMouseWheelZoom = (e) => {
+        if (disableZoom) return
         let zoom = zoomScale
         const { deltaY: delta } = e
         if (delta > 0) {
@@ -138,6 +140,7 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleTouchPinchZoomStart = (e) => {
+        if (disableZoom) return
         if (e.touches.length === 2) {
             const { clientX: x1, clientY: y1 } = e.touches[0]
             const { clientX: x2, clientY: y2 } = e.touches[1]
@@ -151,6 +154,7 @@ const useCanvasDotSelector = (options = {}) => {
     }
 
     const handleTouchPinchZoomMove = (e) => {
+        if (disableZoom) return
         if (e.touches.length === 2) {
             const { clientX: x1, clientY: y1 } = e.touches[0]
             const { clientX: x2, clientY: y2 } = e.touches[1]
