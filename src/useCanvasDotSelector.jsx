@@ -36,6 +36,9 @@ const useCanvasDotSelector = (options = {}) => {
     const [imageMoveDragging, setImageMoveDragging] = useState(false)
 
     const [shapes, setShapes] = useState({})
+    const [defaultShape, setDefaultShape] = useState({
+        key: 'r', x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false, show: true
+    })
     const [defaultShapes, setDefaultShapes] = useState({
         r: { key: 'r', x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false, show: true },
         g: { key: 'g', x: 40, y: 40, xx: 0, yy: 0, radius: dotRadius, color: 'green', set: false, show: true },
@@ -447,6 +450,19 @@ const useCanvasDotSelector = (options = {}) => {
                 ctx.fillText(`x: ${Math.floor(xInfoBoxCoord)}, y: ${Math.floor(yInfoBoxCoord)}`, Math.floor(bgImgOffsX + 5), Math.floor(bgImgOffsY + 15))
             }
 
+
+            // Update tracking shapes object
+            const newTrackingShapes = {}
+            shapesArrOverride.map((shape) => {
+                newTrackingShapes[shape.key] = {
+                    ...shape,
+                    xp: Math.round((shape.x / newImgWidth) * 10000) / 10000,
+                    yp: Math.round((shape.y / newImgHeight) * 10000) / 10000,
+                }
+                return shape
+            })
+            setTrackingShapes(newTrackingShapes)
+
             // Draw shapes ("dots")
             for (let i = 0; i < shapesArrOverride.length; i++) {
                 let shape = shapesArrOverride[i]
@@ -465,6 +481,17 @@ const useCanvasDotSelector = (options = {}) => {
                     ctx.globalAlpha = 0.5
                     ctx.shadowBlur = 0
                     ctx.shadowColor = 'transparent'
+                }
+
+                // If a percentage has been set by 'initDots' move shapes to location initially
+                if (shape.xp && shape.yp) {
+                    shape.x = Math.round(((shape.xp * newImgWidth) * 10000) / 10000)
+                    shape.y = Math.round(((shape.yp * newImgHeight) * 10000) / 10000)
+                    newTrackingShapes[shape.key].xp = shape.xp
+                    newTrackingShapes[shape.key].yp = shape.yp
+                    setTrackingShapes(newTrackingShapes)
+                    delete shape.xp
+                    delete shape.yp
                 }
 
                 // Set shape coordinates relative to the background image coordinates and zoom scale
@@ -497,18 +524,6 @@ const useCanvasDotSelector = (options = {}) => {
 
             // Restore after drawing shapes
             ctx.restore()
-
-            // Update tracking shapes
-            const newTrackingShapes = {}
-            shapesArrOverride.map((shape) => {
-                newTrackingShapes[shape.key] = {
-                    ...shape,
-                    xp: Math.round((shape.x / newImgWidth) * 10000) / 10000,
-                    yp: Math.round((shape.y / newImgHeight) * 10000) / 10000,
-                }
-                return shape
-            })
-            setTrackingShapes(newTrackingShapes)
         }
     }
 
@@ -574,7 +589,7 @@ const useCanvasDotSelector = (options = {}) => {
         // Add and initialize shapes
         if (initialShapeKeys && initialShapeKeys.length) {
             const newShapes = initialShapeKeys.reduce((acc, key) => {
-                if (defaultShapes[key]) acc[key] = defaultShapes[key]
+                if (key.key) acc[key.key] = { ...defaultShape, ...key }
                 return acc
             }, {})
             const newShapesKeys = Object.keys(newShapes)
