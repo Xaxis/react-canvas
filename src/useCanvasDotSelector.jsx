@@ -5,6 +5,7 @@ const useCanvasDotSelector = (options = {}) => {
         bgColor = '#000000',
         bgImageSrc = '',
         initDots = [],
+        initDotsHidden = false,
         dotRadius = 10,
         showGrid = false,
         disableZoom = false,
@@ -38,14 +39,6 @@ const useCanvasDotSelector = (options = {}) => {
     const [shapes, setShapes] = useState({})
     const [defaultShape, setDefaultShape] = useState({
         key: 'r', x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false, show: true
-    })
-    const [defaultShapes, setDefaultShapes] = useState({
-        r: { key: 'r', x: 20, y: 20, xx: 0, yy: 0, radius: dotRadius, color: 'red', set: false, show: true },
-        g: { key: 'g', x: 40, y: 40, xx: 0, yy: 0, radius: dotRadius, color: 'green', set: false, show: true },
-        b: { key: 'b', x: 60, y: 60, xx: 0, yy: 0, radius: dotRadius, color: 'blue', set: false, show: true },
-        c: { key: 'c', x: 80, y: 80, xx: 0, yy: 0, radius: dotRadius, color: 'cyan', set: false, show: true },
-        m: { key: 'm', x: 100, y: 100, xx: 0, yy: 0, radius: dotRadius, color: 'magenta', set: false, show: true },
-        y: { key: 'y', x: 120, y: 120, xx: 0, yy: 0, radius: dotRadius, color: 'yellow', set: false, show: true },
     })
     const [shapesArr, setShapesArr] = useState([])
     const [initialShapeKeys, setInitialShapeKeys] = useState(initDots)
@@ -467,8 +460,8 @@ const useCanvasDotSelector = (options = {}) => {
             for (let i = 0; i < shapesArrOverride.length; i++) {
                 let shape = shapesArrOverride[i]
 
-                // Hide shape if set to hidden
-                if (!shape.show) continue
+                // Reset global alpha
+                ctx.globalAlpha = 1
 
                 // Set outer glow of active shape
                 if (activeDraggingShape && activeDraggingShape.key === shape.key) {
@@ -497,6 +490,9 @@ const useCanvasDotSelector = (options = {}) => {
                 // Set shape coordinates relative to the background image coordinates and zoom scale
                 let shapeX = shape.xx = Math.floor((shape.x * zoomScaleOverride) + bgImgOffsX + imageMoveOffsetCoordsOverride.x)
                 let shapeY = shape.yy = Math.floor((shape.y * zoomScaleOverride) + bgImgOffsY + imageMoveOffsetCoordsOverride.y)
+
+                // Hide shape if set to hidden
+                if (!shape.show) ctx.globalAlpha = 0
 
                 // Draw circle (outline)
                 ctx.beginPath()
@@ -597,7 +593,7 @@ const useCanvasDotSelector = (options = {}) => {
             const shapesKeysDiff = newShapesKeys.filter((key) => !shapesKeys.includes(key))
             if (shapesKeysDiff.length) {
                 setShapes(newShapes)
-                setShapesArr(Object.entries(newShapes).map(([key, shape]) => ({ ...shape, key })))
+                setShapesArr(Object.entries(newShapes).map(([key, shape]) => ({ ...shape, key, show: !initDotsHidden })))
             }
         }
 

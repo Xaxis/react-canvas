@@ -27,6 +27,7 @@ const CanvasDotSelector = (props) => {
             { key: 'g', color: 'green', xp: 0.6, yp: 0.6 },
             { key: 'b', color: 'blue', xp: 0.7, yp: 0.7 },
         ],
+        initDotsHidden: true,
         dotRadius: 8,
         showGrid: true
     })
@@ -46,8 +47,8 @@ const CanvasDotSelector = (props) => {
     useEffect(() => {
         if (Object.entries(dotsState).length) {
             const { xp, yp, x, y } = dotsState.b
-            // console.log('dotsState: ', dotsState)
-            console.log('xp: ', xp, 'yp: ', yp, 'x: ', x, 'y: ', y)
+            console.log('dotsState: ', dotsState.p)
+            // console.log('xp: ', xp, 'yp: ', yp, 'x: ', x, 'y: ', y)
         }
     }, [dotsState])
 
@@ -106,11 +107,12 @@ const CanvasDotSelector = (props) => {
             <div>
                 <button
                     onClick={() => {
-                        dotsState.r.show = !dotsState.r.show
+                        dotsState.p.show = !dotsState.p.show
+                        console.log('dotsState.p: ', dotsState.p)
                         setDotsState(dotsState)
                     }}
                 >
-                    Red Dot
+                    Purple Dot
                 </button>
                 <button
                     onClick={() => {
