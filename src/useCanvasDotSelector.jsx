@@ -460,9 +460,6 @@ const useCanvasDotSelector = (options = {}) => {
             for (let i = 0; i < shapesArrOverride.length; i++) {
                 let shape = shapesArrOverride[i]
 
-                // Reset global alpha
-                ctx.globalAlpha = 1
-
                 // Set outer glow of active shape
                 if (activeDraggingShape && activeDraggingShape.key === shape.key) {
                     ctx.shadowBlur = 10
